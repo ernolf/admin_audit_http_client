@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<!--
+  - SPDX-FileCopyrightText: 2026 [ernolf] Raphael Gradenwitz
+  - SPDX-License-Identifier: AGPL-3.0-or-later
+-->
+<info xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	  xsi:noNamespaceSchemaLocation="https://apps.nextcloud.com/schema/apps/info.xsd">
+	<id>admin_audit_http_client</id>
+	<name>Auditing / HTTP Client Logging</name>
+	<summary>Logs all outgoing HTTP requests made by Nextcloud's internal HTTP client.</summary>
+	<description>
+Extends admin_audit with logging of all outgoing HTTP requests made by Nextcloud's internal Guzzle-based HTTP client. Logs include method, URI, status code, HTTP version, request/response headers, cURL transfer statistics, and compression metrics.
+No UI, no routes — pure audit logging to /var/log/nextcloud/client/.
+	</description>
+	<version>0.1.0</version>
+	<licence>agpl</licence>
+    <author mail="raphael.gradenwitz@googlemail.com">[ernolf] - Raphael Gradenwitz</author>
+	<namespace>AdminAuditHttpClient</namespace>
+	<types>
+		<logging/>
+	</types>
+	<category>monitoring</category>
+	<website>https://github.com/ernolf/admin_audit_http_client</website>
+	<bugs>https://github.com/ernolf/admin_audit_http_client/issues</bugs>
+	<repository type="git">https://github.com/ernolf/admin_audit_http_client</repository>
+	<donation type="paypal" title="Donate via PayPal">https://PayPal.Me/ernolf</donation>
+	<donation>https://github.com/sponsors/ernolf</donation>
+	<dependencies>
+		<nextcloud min-version="32" max-version="34"/>
+	</dependencies>
+</info>
