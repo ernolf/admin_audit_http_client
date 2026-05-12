@@ -1,0 +1,23 @@
+name: Release Asset
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  release-asset:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Create release tarball
+        run: |
+          git archive --prefix=admin_audit_http_client/ HEAD \
+            | gzip > admin_audit_http_client-${GITHUB_REF_NAME}.tar.gz
+
+      - name: Upload release asset
+        run: gh release upload ${GITHUB_REF_NAME} admin_audit_http_client-${GITHUB_REF_NAME}.tar.gz
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
