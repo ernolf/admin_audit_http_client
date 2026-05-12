@@ -18,17 +18,30 @@ use Psr\Http\Message\StreamInterface;
 class HttpClientLoggerMiddleware {
 	private LoggerInterface $logger;
 	private string $logBaseDir;
+	private int $logLevel;
+	private string $logFormat;
+	private array $excludeDomains;
 
 	public function __construct(
 		LoggerInterface $logger,
-		string $logBaseDir
+		string $logBaseDir,
+		int $logLevel = 0,
+		string $logFormat = 'both',
+		array $excludeDomains = [],
 	) {
-		$this->logger = $logger;
-		$this->logBaseDir = rtrim($logBaseDir, '/');
+		$this->logger         = $logger;
+		$this->logBaseDir     = rtrim($logBaseDir, '/');
+		$this->logLevel       = $logLevel;
+		$this->logFormat      = $logFormat;
+		$this->excludeDomains = $excludeDomains;
 	}
 
 	public function __invoke(callable $handler): callable {
 		return function (RequestInterface $request, array $options) use ($handler) {
+			if (!empty($this->excludeDomains) && $this->isExcluded((string)$request->getUri()->getHost())) {
+				return $handler($request, $options);
+			}
+
 			// Generate/extract request ID
 			try {
 				$reqId = $request->hasHeader('X-Nextcloud-ReqId')
@@ -124,18 +137,22 @@ class HttpClientLoggerMiddleware {
 						}
 
 						if ($immediate) {
-							$this->writeImmediate($reqId, $meta, $respHeaders, $handlerStats);
+							if ($this->shouldLog($intStatus)) {
+								$this->writeImmediate($reqId, $meta, $respHeaders, $handlerStats);
+							}
 							try {
 								TransferStatsStore::clear($reqId);
 							} catch (\Throwable $e) {
 							}
 						} else {
-							try {
-								$response = $response->withBody(
-									new CountingStream($response->getBody(), $reqId, $meta, $this->logBaseDir, $this->logger)
-								);
-							} catch (\Throwable $e) {
-								$this->logger->debug('HttpClientLoggerMiddleware: CountingStream wrap failed: ' . $e->getMessage());
+							if ($this->shouldLog($intStatus)) {
+								try {
+									$response = $response->withBody(
+										new CountingStream($response->getBody(), $reqId, $meta, $this->logBaseDir, $this->logger, $this->logFormat)
+									);
+								} catch (\Throwable $e) {
+									$this->logger->debug('HttpClientLoggerMiddleware: CountingStream wrap failed: ' . $e->getMessage());
+								}
 							}
 						}
 					} catch (\Throwable $e) {
@@ -171,8 +188,12 @@ class HttpClientLoggerMiddleware {
 						];
 						[$jsonFile, $plainFile] = LogPathHelper::getPathsFromMeta($metaForPaths, $this->logBaseDir, $reqId);
 
-						@file_put_contents($jsonFile, json_encode($entry, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . PHP_EOL, FILE_APPEND | LOCK_EX);
-						@file_put_contents($plainFile, $plain, FILE_APPEND | LOCK_EX);
+						if (in_array($this->logFormat, ['json', 'both'], true)) {
+							@file_put_contents($jsonFile, json_encode($entry, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . PHP_EOL, FILE_APPEND | LOCK_EX);
+						}
+						if (in_array($this->logFormat, ['plain', 'both'], true)) {
+							@file_put_contents($plainFile, $plain, FILE_APPEND | LOCK_EX);
+						}
 
 						try {
 							TransferStatsStore::clear($reqId);
@@ -283,11 +304,42 @@ class HttpClientLoggerMiddleware {
 
 			[$jsonFile, $plainFile] = LogPathHelper::getPathsFromMeta($meta, $this->logBaseDir, $reqId);
 
-			@file_put_contents($jsonFile, json_encode($merged, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . PHP_EOL, FILE_APPEND | LOCK_EX);
-			@file_put_contents($plainFile, $plain, FILE_APPEND | LOCK_EX);
+			if (in_array($this->logFormat, ['json', 'both'], true)) {
+				@file_put_contents($jsonFile, json_encode($merged, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . PHP_EOL, FILE_APPEND | LOCK_EX);
+			}
+			if (in_array($this->logFormat, ['plain', 'both'], true)) {
+				@file_put_contents($plainFile, $plain, FILE_APPEND | LOCK_EX);
+			}
 		} catch (\Throwable $e) {
 			$this->logger->debug('HttpClientLoggerMiddleware: writeImmediate failed: ' . $e->getMessage());
 		}
+	}
+
+	private function shouldLog(int $status): bool {
+		return match ($this->logLevel) {
+			2       => $status >= 500,
+			1       => $status >= 400,
+			default => true,
+		};
+	}
+
+	private function isExcluded(string $host): bool {
+		$host = strtolower($host);
+		foreach ($this->excludeDomains as $pattern) {
+			$pattern = strtolower(trim((string)$pattern));
+			if ($pattern === '') {
+				continue;
+			}
+			if (str_starts_with($pattern, '*.')) {
+				$suffix = substr($pattern, 1);
+				if (str_ends_with($host, $suffix) || $host === ltrim($suffix, '.')) {
+					return true;
+				}
+			} elseif ($host === $pattern) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	private function normalizeHeaders(array $hdrs): array {

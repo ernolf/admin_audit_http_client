@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0] - 2026-05-12
+
+### Added
+- `loglevel_audit_http_client` config key (int, default `0`): controls which responses are logged — `0` = all, `1` = HTTP 400+ only, `2` = HTTP 500+ only
+- `audit_http_client_logs` config key (string, default `'both'`): selects log output format — `'json'`, `'plain'`, or `'both'`
+- `audit_http_client_logs_exclude_domain` config key (array, default `[]`): list of hostnames to exclude from logging; supports wildcard prefix (`*.example.com`)
+
 ## [0.1.0] - 2026-05-06
 
 ### Added

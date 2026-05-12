@@ -33,7 +33,13 @@ class LoggingClientService implements IClientService {
 			$handler = $guzzle->getConfig('handler');
 			if ($handler instanceof \GuzzleHttp\HandlerStack) {
 				$handler->unshift(
-					new HttpClientLoggerMiddleware($this->logger, $this->resolveLogDir()),
+					new HttpClientLoggerMiddleware(
+						$this->logger,
+						$this->resolveLogDir(),
+						(int)$this->config->getSystemValue('loglevel_audit_http_client', 0),
+						$this->config->getSystemValueString('audit_http_client_logs', 'both'),
+						(array)$this->config->getSystemValue('audit_http_client_logs_exclude_domain', []),
+					),
 					'admin_audit_http_client'
 				);
 			}
