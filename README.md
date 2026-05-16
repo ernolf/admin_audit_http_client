@@ -111,6 +111,19 @@ Download the latest release from the [Releases page](https://github.com/ernolf/a
   ```
   </details>
 
+### Nextcloud All-in-One (AIO)
+
+* <details>
+  <summary>Installation script</summary>
+
+  ```bash
+  TAG=v0.2.0
+  curl -L https://github.com/ernolf/admin_audit_http_client/releases/download/${TAG}/admin_audit_http_client-${TAG}.tar.gz \
+    | sudo docker exec -i --user www-data nextcloud-aio-nextcloud tar -xz -C /var/www/html/custom_apps/
+  sudo docker exec --user www-data -it nextcloud-aio-nextcloud php occ app:enable admin_audit_http_client
+  ```
+  </details>
+
 ### Via git clone (development / always latest)
 
 * <details>
@@ -140,11 +153,24 @@ Remove the old directory and reinstall — this avoids leftover files from previ
   NCDIR=/path/to/nextcloud
   HTUSER=www-data
   cd ${NCDIR}/apps
-  sudo -u ${HTUSER} php ${NCDIR}/occ app:disable admin_audit_http_client
-  sudo rm -rf admin_audit_http_client
+  sudo -u ${HTUSER} php ${NCDIR}/occ app:remove admin_audit_http_client
   sudo curl -L https://github.com/ernolf/admin_audit_http_client/releases/download/${TAG}/admin_audit_http_client-${TAG}.tar.gz | sudo tar -xz
   sudo chown -R ${HTUSER}: admin_audit_http_client
   sudo -u ${HTUSER} php ${NCDIR}/occ app:enable admin_audit_http_client
+  ```
+  </details>
+
+### Nextcloud All-in-One (AIO)
+
+* <details>
+  <summary>Installation script</summary>
+
+  ```bash
+  TAG=v0.2.0
+  sudo docker exec --user www-data -it nextcloud-aio-nextcloud php occ app:remove admin_audit_http_client
+  curl -L https://github.com/ernolf/admin_audit_http_client/releases/download/${TAG}/admin_audit_http_client-${TAG}.tar.gz \
+    | sudo docker exec -i --user www-data nextcloud-aio-nextcloud tar -xz -C /var/www/html/custom_apps/
+  sudo docker exec --user www-data -it nextcloud-aio-nextcloud php occ app:enable admin_audit_http_client
   ```
   </details>
 
@@ -157,8 +183,7 @@ Remove the old directory and reinstall — this avoids leftover files from previ
   NCDIR=/path/to/nextcloud
   HTUSER=www-data
   cd ${NCDIR}/apps
-  sudo -u ${HTUSER} php ${NCDIR}/occ app:disable admin_audit_http_client
-  sudo rm -rf admin_audit_http_client
+  sudo -u ${HTUSER} php ${NCDIR}/occ app:remove admin_audit_http_client
   git clone https://github.com/ernolf/admin_audit_http_client.git
   sudo chown -R ${HTUSER}: admin_audit_http_client
   sudo -u ${HTUSER} php ${NCDIR}/occ app:enable admin_audit_http_client
