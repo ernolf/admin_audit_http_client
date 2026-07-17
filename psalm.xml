@@ -1,0 +1,55 @@
+<?xml version="1.0"?>
+<!--
+  - SPDX-FileCopyrightText: 2026 [ernolf] Raphael Gradenwitz <raphael.gradenwitz@googlemail.com>
+  - SPDX-License-Identifier: AGPL-3.0-or-later
+-->
+<psalm
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns="https://getpsalm.org/schema/config"
+	xsi:schemaLocation="https://getpsalm.org/schema/config vendor-bin/psalm/vendor/vimeo/psalm/config.xsd"
+	ensureOverrideAttribute="false"
+	errorLevel="4"
+	findUnusedBaselineEntry="false"
+	findUnusedCode="false"
+	phpVersion="8.1"
+	resolveFromConfigFile="true"
+>
+	<stubs>
+		<file name="tests/stub.php" preloadClasses="true"/>
+	</stubs>
+	<projectFiles>
+		<directory name="lib" />
+		<ignoreFiles>
+			<directory name="vendor" />
+			<directory name="vendor-bin" />
+		</ignoreFiles>
+	</projectFiles>
+	<extraFiles>
+		<directory name="vendor" />
+		<directory name="vendor-bin/nextcloud-ocp" />
+	</extraFiles>
+	<issueHandlers>
+		<!-- The middleware injection relies on server internals; the legacy
+		     accessors involved have no OCP replacement that exposes the Guzzle
+		     handler stack. -->
+		<DeprecatedMethod>
+			<errorLevel type="suppress">
+				<referencedMethod name="OCP\IContainer::registerService" />
+				<referencedMethod name="OCP\IServerContainer::getMemCacheFactory" />
+				<referencedMethod name="GuzzleHttp\Client::getConfig" />
+			</errorLevel>
+		</DeprecatedMethod>
+		<!-- TransferStatsStore's memcache path targets pre-NC-32 APIs and is
+		     fenced by try/catch at runtime. -->
+		<UndefinedInterfaceMethod>
+			<errorLevel type="suppress">
+				<file name="lib/Http/Client/Middleware/TransferStatsStore.php" />
+			</errorLevel>
+		</UndefinedInterfaceMethod>
+		<RedundantCondition>
+			<errorLevel type="suppress">
+				<file name="lib/Http/Client/Middleware/TransferStatsStore.php" />
+			</errorLevel>
+		</RedundantCondition>
+	</issueHandlers>
+</psalm>
