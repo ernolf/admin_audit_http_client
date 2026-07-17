@@ -9,12 +9,12 @@
 	<name>Auditing / HTTP Client Logging</name>
 	<summary>Logs all outgoing HTTP requests made by Nextcloud's internal HTTP client.</summary>
 	<description>
-Extends admin_audit with logging of all outgoing HTTP requests made by Nextcloud's internal Guzzle-based HTTP client. Logs include method, URI, status code, HTTP version, request/response headers, cURL transfer statistics, and compression metrics.
-No UI, no routes — pure audit logging to /var/log/nextcloud/client/.
+Extends admin_audit with logging of all outgoing HTTP requests made by Nextcloud's internal Guzzle-based HTTP client. Logs include method, URI, status code, HTTP version, request and response headers, cURL transfer statistics, and compression metrics. Credential-bearing headers such as Authorization and Cookie are always redacted.
+No UI, no routes — pure audit logging into per-host JSON and plain-text files below a configurable log directory.
 	</description>
 	<version>0.2.0</version>
 	<licence>agpl</licence>
-    <author mail="raphael.gradenwitz@googlemail.com">[ernolf] - Raphael Gradenwitz</author>
+	<author mail="raphael.gradenwitz@googlemail.com">[ernolf] - Raphael Gradenwitz</author>
 	<namespace>AdminAuditHttpClient</namespace>
 	<types>
 		<logging/>
@@ -27,6 +27,6 @@ No UI, no routes — pure audit logging to /var/log/nextcloud/client/.
 	<donation>https://github.com/sponsors/ernolf</donation>
 	<dependencies>
 		<php min-version="8.1" max-version="8.5"/>
-		<nextcloud min-version="32" max-version="34"/>
+		<nextcloud min-version="32" max-version="35"/>
 	</dependencies>
 </info>

@@ -34,6 +34,14 @@ class Application extends App implements IBootstrap {
 		$config = $server->get(IConfig::class);
 		$request = $server->get(IRequest::class);
 
+		/**
+		 * registerService on the server container is the only way to replace
+		 * a server-wide service. OCP <= 34 marks it deprecated; OCP 35 narrows
+		 * getServerContainer() to ContainerInterface, hiding it statically.
+		 *
+		 * @psalm-suppress UndefinedInterfaceMethod
+		 * @psalm-suppress DeprecatedMethod
+		 */
 		$server->registerService(
 			IClientService::class,
 			fn () => new LoggingClientService($inner, $logger, $config, $request)
