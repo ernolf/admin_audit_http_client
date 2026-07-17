@@ -18,12 +18,12 @@ Nextcloud app that logs all outgoing HTTP requests made by Nextcloud's built-in 
 
 All settings are optional.
 
-### `logdir_audit_http_client`
+### `audit_http_client_logdir`
 
 Explicit override for the log directory. Takes precedence over everything else.
 
 ```php
-'logdir_audit_http_client' => '/var/log/nextcloud/http_client',
+'audit_http_client_logdir' => '/var/log/nextcloud/http_client',
 ```
 
 If this key is absent, the log directory is derived automatically:
@@ -36,7 +36,7 @@ If this key is absent, the log directory is derived automatically:
 
 The directory is created automatically on first use.
 
-### `loglevel_audit_http_client`
+### `audit_http_client_loglevel`
 
 Controls which responses are logged. Default: `0`.
 
@@ -49,10 +49,10 @@ Controls which responses are logged. Default: `0`.
 Network errors (connection failures, DNS failures, etc.) are always logged regardless of this setting.
 
 ```php
-'loglevel_audit_http_client' => 1,
+'audit_http_client_loglevel' => 1,
 ```
 
-### `audit_http_client_logs`
+### `audit_http_client_format`
 
 Selects the log output format. Default: `'both'`.
 
@@ -69,15 +69,15 @@ a3f9bc 2026-05-05T14:23:01+00:00 GET https://example.com/feed HTTP/2 200 compres
 ```
 
 ```php
-'audit_http_client_logs' => 'json',
+'audit_http_client_format' => 'json',
 ```
 
-### `audit_http_client_logs_exclude_domain`
+### `audit_http_client_exclude_domains`
 
 List of hostnames to exclude from logging. Requests to matching hosts are passed through without any log entry. Matching is case-insensitive. Wildcard prefix (`*.example.com`) is supported and also matches the bare domain (`example.com`). Default: `[]`.
 
 ```php
-'audit_http_client_logs_exclude_domain' => [
+'audit_http_client_exclude_domains' => [
     'apps.nextcloud.com',
     'updates.nextcloud.com',
     '*.googleapis.com',
