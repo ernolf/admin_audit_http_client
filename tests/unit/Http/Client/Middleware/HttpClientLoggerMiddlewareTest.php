@@ -14,13 +14,18 @@ use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
 
 class HttpClientLoggerMiddlewareTest extends TestCase {
-	private function middleware(int $logLevel = 0, array $excludeDomains = []): HttpClientLoggerMiddleware {
+	private function middleware(
+		int $logLevel = 0,
+		array $excludeDomains = [],
+		array $redactHeaders = [],
+	): HttpClientLoggerMiddleware {
 		return new HttpClientLoggerMiddleware(
 			new NullLogger(),
 			sys_get_temp_dir() . '/aahc-mw-unused',
 			$logLevel,
 			'both',
 			$excludeDomains,
+			$redactHeaders,
 		);
 	}
 
@@ -108,6 +113,48 @@ class HttpClientLoggerMiddlewareTest extends TestCase {
 		$this->assertSame(
 			['If-None-Match' => 'v1'],
 			$this->invokePrivate($mw, 'compactHeaders', [['If-None-Match' => ['"v1"']]]),
+		);
+	}
+
+	public function testCompactHeadersRedactsSensitiveDefaultsCaseInsensitive(): void {
+		$mw = $this->middleware();
+		$this->assertSame(
+			[
+				'Authorization' => '[redacted]',
+				'Proxy-Authorization' => '[redacted]',
+				'Cookie' => '[redacted]',
+				'SET-COOKIE' => '[redacted]',
+				'x-api-key' => '[redacted]',
+				'X-Auth-Token' => '[redacted]',
+				'Accept' => 'text/html',
+			],
+			$this->invokePrivate($mw, 'compactHeaders', [[
+				'Authorization' => ['Bearer secret-token'],
+				'Proxy-Authorization' => ['Basic abc'],
+				'Cookie' => ['session=abc'],
+				'SET-COOKIE' => ['a=1', 'b=2'],
+				'x-api-key' => 'key123',
+				'X-Auth-Token' => ['token'],
+				'Accept' => ['text/html'],
+			]]),
+		);
+	}
+
+	public function testCompactHeadersRedactsConfiguredExtraHeaders(): void {
+		$mw = $this->middleware(0, [], ['X-Secret', '  x-internal  ']);
+		$this->assertSame(
+			[
+				'X-Secret' => '[redacted]',
+				'X-Internal' => '[redacted]',
+				'Authorization' => '[redacted]',
+				'Accept' => 'text/html',
+			],
+			$this->invokePrivate($mw, 'compactHeaders', [[
+				'X-Secret' => ['v'],
+				'X-Internal' => ['w'],
+				'Authorization' => ['Bearer secret'],
+				'Accept' => ['text/html'],
+			]]),
 		);
 	}
 

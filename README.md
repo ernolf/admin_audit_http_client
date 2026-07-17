@@ -84,6 +84,18 @@ List of hostnames to exclude from logging. Requests to matching hosts are passed
 ],
 ```
 
+### `audit_http_client_redact_headers`
+
+Additional header names whose values are logged as `[redacted]`. Matching is case-insensitive. Default: `[]`.
+
+The following headers are always redacted and cannot be un-redacted: `Authorization`, `Proxy-Authorization`, `Cookie`, `Set-Cookie`, `X-Api-Key`, `X-Auth-Token`.
+
+```php
+'audit_http_client_redact_headers' => [
+    'X-Vendor-Secret',
+],
+```
+
 ## Installation
 
 No npm, no composer, no build step required.
