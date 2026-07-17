@@ -210,9 +210,7 @@ class HttpClientLoggerMiddleware {
 	private function writeImmediate(string $reqId, array $meta, array $respHeaders, ?array $handlerStats): void {
 		try {
 			$compressed = null;
-			$decompressed = 0;
 			$encoding = 'none';
-			$ratio = null;
 
 			if (is_array($handlerStats) && !empty($handlerStats['size_download'])) {
 				$compressed = (int)round($handlerStats['size_download']);
@@ -241,11 +239,8 @@ class HttpClientLoggerMiddleware {
 				}
 			}
 
-			$decompressed = $compressed ?? 0;
-			if ($compressed !== null && $decompressed > 0) {
-				$ratio = round($compressed / $decompressed, 2);
-			}
-
+			// No body is consumed on the immediate path, so there is no
+			// decompressed byte count and no meaningful ratio.
 			$merged = [
 				'reqId' => $reqId,
 				'time' => $meta['time'],
@@ -259,8 +254,8 @@ class HttpClientLoggerMiddleware {
 				'compressionStats' => [
 					'encoding' => $encoding,
 					'compressed_bytes' => $compressed,
-					'decompressed_bytes' => $decompressed,
-					'ratio' => $ratio,
+					'decompressed_bytes' => null,
+					'ratio' => null,
 				],
 			];
 
@@ -290,8 +285,8 @@ class HttpClientLoggerMiddleware {
 				$meta['http'] ?? '-',
 				$meta['status'] ?? '-',
 				$compressed ?? '-',
-				$decompressed,
-				$ratio ?? '-',
+				'-',
+				'-',
 				$encoding,
 				$headerNames,
 				$userAgent

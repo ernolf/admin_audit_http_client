@@ -53,7 +53,7 @@ class LoggingClientService implements IClientService {
 				);
 			}
 		} catch (\Throwable $e) {
-			$this->logger->debug(
+			$this->logger->warning(
 				'admin_audit_http_client: could not inject middleware: ' . $e->getMessage()
 			);
 		}

@@ -110,6 +110,38 @@ class HttpClientLoggerMiddlewareTest extends TestCase {
 		$this->assertNull(TransferStatsStore::get($reqId));
 	}
 
+	public function testWriteImmediateOmitsDecompressedBytesAndRatio(): void {
+		$dir = sys_get_temp_dir() . '/aahc-wi-' . bin2hex(random_bytes(4));
+		$mw = new HttpClientLoggerMiddleware(new NullLogger(), $dir);
+
+		$meta = [
+			'reqId' => 'req-wi-1',
+			'time' => '2026-07-17T00:00:00+00:00',
+			'method' => 'GET',
+			'uri' => 'https://example.com/ping',
+			'status' => 204,
+			'http' => 'HTTP/2',
+			'requestHeaders' => [],
+			'responseHeaders' => [],
+		];
+
+		try {
+			$this->invokePrivate($mw, 'writeImmediate', ['req-wi-1', $meta, [], ['size_download' => 10]]);
+
+			$lines = file($dir . '/example.com.json', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+			$this->assertNotFalse($lines);
+			$entry = json_decode($lines[0], true, 512, JSON_THROW_ON_ERROR);
+			$this->assertSame(10, $entry['compressionStats']['compressed_bytes']);
+			$this->assertNull($entry['compressionStats']['decompressed_bytes']);
+			$this->assertNull($entry['compressionStats']['ratio']);
+		} finally {
+			foreach (glob($dir . '/*') ?: [] as $file) {
+				@unlink($file);
+			}
+			@rmdir($dir);
+		}
+	}
+
 	public function testNormalizeHeadersWrapsScalarsAndStringifiesValues(): void {
 		$mw = $this->middleware();
 		$this->assertSame(
