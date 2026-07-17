@@ -23,8 +23,14 @@ class LoggingClientService implements IClientService {
 	) {
 	}
 
-	public function newClient(): IClient {
-		$client = $this->inner->newClient();
+	// NC 35 added an optional $handler override parameter to
+	// IClientService::newClient(); the extra optional parameter is also a
+	// valid implementation of the parameter-less interface on NC 32-34.
+	public function newClient(?callable $handler = null): IClient {
+		/** @psalm-suppress TooManyArguments the stable32 OCP stubs predate the handler parameter */
+		$client = $handler === null
+			? $this->inner->newClient()
+			: $this->inner->newClient($handler);
 
 		try {
 			$ref = new \ReflectionProperty(\OC\Http\Client\Client::class, 'client');
