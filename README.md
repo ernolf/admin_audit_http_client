@@ -1,3 +1,8 @@
+<!--
+  SPDX-FileCopyrightText: 2026 [ernolf] Raphael Gradenwitz <raphael.gradenwitz@googlemail.com>
+  SPDX-License-Identifier: AGPL-3.0-or-later
+-->
+
 # admin_audit_http_client
 
 Nextcloud app that logs all outgoing HTTP requests made by Nextcloud's built-in HTTP client (`OC\Http\Client\Client`, Guzzle-based).
