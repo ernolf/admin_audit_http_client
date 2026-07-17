@@ -30,7 +30,8 @@
 		"cs:check": "php-cs-fixer fix --dry-run --diff",
 		"cs:fix": "php-cs-fixer fix",
 		"psalm": "psalm --no-cache --threads=$(nproc)",
-		"psalm:update-baseline": "psalm --threads=1 --update-baseline"
+		"psalm:update-baseline": "psalm --threads=1 --update-baseline",
+		"test:unit": "phpunit -c phpunit.xml --colors=always --testdox --fail-on-warning --fail-on-risky"
 	},
 	"require": {
 		"php": ">=8.1",
