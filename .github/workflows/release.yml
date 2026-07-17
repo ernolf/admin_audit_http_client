@@ -1,0 +1,51 @@
+# SPDX-FileCopyrightText: 2026 [ernolf] Raphael Gradenwitz <raphael.gradenwitz@googlemail.com>
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+name: Release tarball
+
+# Builds the install tarball (pure PHP app, no runtime dependencies, no build
+# step) and, when a release is published, attaches it as a release asset.
+# workflow_dispatch produces a downloadable artifact for testing without
+# publishing a release. No secrets, no App Store upload: the store later only
+# receives the download URL and a signature.
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  tarball:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Assemble runtime tree
+        run: |
+          mkdir -p package/admin_audit_http_client
+          cp -r appinfo lib LICENSES CHANGELOG.md REUSE.toml package/admin_audit_http_client/
+
+      - name: Create tarball
+        run: |
+          version=$(grep -oPm1 '(?<=<version>)[^<]+' appinfo/info.xml)
+          tarball="admin_audit_http_client-${version}.tar.gz"
+          tar -C package -czf "$tarball" admin_audit_http_client
+          echo "TARBALL=$tarball" >> "$GITHUB_ENV"
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: admin_audit_http_client-tarball
+          path: ${{ env.TARBALL }}
+
+      - name: Attach to release
+        if: github.event_name == 'release'
+        run: gh release upload "${GITHUB_REF_NAME}" "${TARBALL}" --clobber
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
