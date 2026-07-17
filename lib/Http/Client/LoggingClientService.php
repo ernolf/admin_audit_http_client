@@ -13,6 +13,7 @@ use OCA\AdminAuditHttpClient\Http\Client\Middleware\HttpClientLoggerMiddleware;
 use OCP\Http\Client\IClient;
 use OCP\Http\Client\IClientService;
 use OCP\IConfig;
+use OCP\IRequest;
 use Psr\Log\LoggerInterface;
 
 class LoggingClientService implements IClientService {
@@ -20,6 +21,7 @@ class LoggingClientService implements IClientService {
 		private IClientService $inner,
 		private LoggerInterface $logger,
 		private IConfig $config,
+		private IRequest $request,
 	) {
 	}
 
@@ -48,6 +50,7 @@ class LoggingClientService implements IClientService {
 						$this->config->getSystemValueString('audit_http_client_logs', 'both'),
 						(array)$this->config->getSystemValue('audit_http_client_logs_exclude_domain', []),
 						(array)$this->config->getSystemValue('audit_http_client_redact_headers', []),
+						$this->request->getId(),
 					),
 					'admin_audit_http_client'
 				);

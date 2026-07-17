@@ -13,6 +13,7 @@ use GuzzleHttp\HandlerStack;
 use OCA\AdminAuditHttpClient\Http\Client\LoggingClientService;
 use OCP\Http\Client\IClientService;
 use OCP\IConfig;
+use OCP\IRequest;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 
@@ -29,6 +30,7 @@ class MiddlewareInjectionTest extends TestCase {
 			$server->get(IClientService::class),
 			$server->get(LoggerInterface::class),
 			$server->get(IConfig::class),
+			$server->get(IRequest::class),
 		);
 
 		$client = $service->newClient();

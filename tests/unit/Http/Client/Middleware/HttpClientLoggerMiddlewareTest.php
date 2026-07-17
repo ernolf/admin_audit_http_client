@@ -25,6 +25,7 @@ class HttpClientLoggerMiddlewareTest extends TestCase {
 		int $logLevel = 0,
 		array $excludeDomains = [],
 		array $redactHeaders = [],
+		string $serverReqId = '',
 	): HttpClientLoggerMiddleware {
 		return new HttpClientLoggerMiddleware(
 			new NullLogger(),
@@ -33,6 +34,7 @@ class HttpClientLoggerMiddlewareTest extends TestCase {
 			'both',
 			$excludeDomains,
 			$redactHeaders,
+			$serverReqId,
 		);
 	}
 
@@ -102,12 +104,25 @@ class HttpClientLoggerMiddlewareTest extends TestCase {
 		});
 
 		$response = $handler(
-			new Request('GET', 'https://example.com/'),
-			['nc_request_id' => $reqId],
+			new Request('GET', 'https://example.com/', ['X-Nextcloud-ReqId' => $reqId]),
+			[],
 		)->wait();
 
 		$this->assertNotInstanceOf(CountingStream::class, $response->getBody());
 		$this->assertNull(TransferStatsStore::get($reqId));
+	}
+
+	public function testGeneratedRequestIdCarriesServerRequestIdPrefix(): void {
+		$mw = $this->middleware(2, [], [], 'server-req');
+		$seen = null;
+
+		$handler = $mw(function (Request $request, array $options) use (&$seen) {
+			$seen = $request->getHeaderLine('X-Nextcloud-ReqId');
+			return new FulfilledPromise(new Response(200, [], 'x'));
+		});
+		$handler(new Request('GET', 'https://example.com/'), [])->wait();
+
+		$this->assertStringStartsWith('server-req-', (string)$seen);
 	}
 
 	public function testWriteImmediateOmitsDecompressedBytesAndRatio(): void {
