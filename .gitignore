@@ -1,0 +1,13 @@
+# SPDX-FileCopyrightText: 2026 [ernolf] Raphael Gradenwitz <raphael.gradenwitz@googlemail.com>
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+# Composer / PHP dependencies (vendored on the server via `composer install`)
+/vendor/
+/vendor-bin/*/vendor/
+/vendor-bin/*/composer.lock
+
+# Tooling caches
+/.php-cs-fixer.cache
+/.phpunit.cache/
+/.phpunit.result.cache
+/build/
