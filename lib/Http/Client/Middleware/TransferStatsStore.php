@@ -9,77 +9,25 @@ declare(strict_types=1);
 
 namespace OCA\AdminAuditHttpClient\Http\Client\Middleware;
 
+/**
+ * Process-local correlation store for cURL transfer stats. Guzzle invokes the
+ * on_stats callback and the response handlers within the same PHP process, so
+ * a static array is sufficient; entries are removed as soon as the request's
+ * log entry has been written or logging is skipped.
+ */
 class TransferStatsStore {
-	/** @var \OCP\IMemcache|null */
-	private static $cache = null;
-
-	private static array $fallback = [];
-
-	private static function ensureCache(): void {
-		if (self::$cache !== null) {
-			return;
-		}
-
-		try {
-			$server = \OC::$server;
-			if ($server !== null && method_exists($server, 'getMemCacheFactory')) {
-				$factory = $server->getMemCacheFactory();
-				self::$cache = $factory->create('admin_audit_http_client');
-			}
-		} catch (\Throwable $e) {
-			self::$cache = null;
-		}
-	}
+	/** @var array<string, array> */
+	private static array $stats = [];
 
 	public static function set(string $reqId, array $stats): void {
-		self::ensureCache();
-		if (self::$cache !== null) {
-			try {
-				$val = json_encode($stats, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-				self::$cache->set($reqId, $val, 0);
-				return;
-			} catch (\Throwable $e) {
-				// fall through to fallback
-			}
-		}
-
-		self::$fallback[$reqId] = $stats;
+		self::$stats[$reqId] = $stats;
 	}
 
 	public static function get(string $reqId): ?array {
-		self::ensureCache();
-		if (self::$cache !== null) {
-			try {
-				$val = self::$cache->get($reqId);
-				if ($val === null) {
-					return null;
-				}
-				if (is_string($val)) {
-					$decoded = json_decode($val, true);
-					return is_array($decoded) ? $decoded : null;
-				}
-				if (is_array($val)) {
-					return $val;
-				}
-				return null;
-			} catch (\Throwable $e) {
-				// fall through to fallback
-			}
-		}
-
-		return self::$fallback[$reqId] ?? null;
+		return self::$stats[$reqId] ?? null;
 	}
 
 	public static function clear(string $reqId): void {
-		self::ensureCache();
-		if (self::$cache !== null) {
-			try {
-				self::$cache->delete($reqId);
-				return;
-			} catch (\Throwable $e) {
-				// fall through to fallback
-			}
-		}
-		unset(self::$fallback[$reqId]);
+		unset(self::$stats[$reqId]);
 	}
 }

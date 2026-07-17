@@ -82,11 +82,7 @@ class HttpClientLoggerMiddleware {
 			// Attach on_stats callback to capture cURL transfer stats
 			if (!isset($options[RequestOptions::ON_STATS])) {
 				$options[RequestOptions::ON_STATS] = function (TransferStats $stats) use ($reqId): void {
-					try {
-						TransferStatsStore::set($reqId, $stats->getHandlerStats());
-					} catch (\Throwable $e) {
-						// best-effort: never break request handling
-					}
+					TransferStatsStore::set($reqId, $stats->getHandlerStats());
 				};
 			}
 
@@ -99,15 +95,7 @@ class HttpClientLoggerMiddleware {
 					try {
 						$respHeaders = $this->normalizeHeaders($response->getHeaders());
 
-						$handlerStats = null;
-						try {
-							$stored = TransferStatsStore::get($reqId);
-							if (is_array($stored)) {
-								$handlerStats = $stored['handlerStats'] ?? $stored;
-							}
-						} catch (\Throwable $e) {
-							$this->logger->debug('HttpClientLoggerMiddleware: TransferStatsStore access failed: ' . $e->getMessage());
-						}
+						$handlerStats = TransferStatsStore::get($reqId);
 
 						$meta = [
 							'reqId' => $reqId,
@@ -119,18 +107,6 @@ class HttpClientLoggerMiddleware {
 							'requestHeaders' => $this->compactHeaders($reqHeaders),
 							'responseHeaders' => $this->compactHeaders($respHeaders),
 						];
-
-						// Persist meta so on_stats data (arriving asynchronously) can be merged
-						try {
-							$stored = TransferStatsStore::get($reqId) ?? [];
-							$stored['meta'] = $meta;
-							if (is_array($handlerStats)) {
-								$stored['handlerStats'] = $handlerStats;
-							}
-							TransferStatsStore::set($reqId, $stored);
-						} catch (\Throwable $e) {
-							$this->logger->debug('HttpClientLoggerMiddleware: failed to persist meta: ' . $e->getMessage());
-						}
 
 						$intStatus = $meta['status'];
 
@@ -160,19 +136,21 @@ class HttpClientLoggerMiddleware {
 							if ($this->shouldLog($intStatus)) {
 								$this->writeImmediate($reqId, $meta, $respHeaders, $handlerStats);
 							}
-							try {
-								TransferStatsStore::clear($reqId);
-							} catch (\Throwable $e) {
-							}
+							TransferStatsStore::clear($reqId);
 						} else {
+							$wrapped = false;
 							if ($this->shouldLog($intStatus)) {
 								try {
 									$response = $response->withBody(
 										new CountingStream($response->getBody(), $reqId, $meta, $this->logBaseDir, $this->logger, $this->logFormat)
 									);
+									$wrapped = true;
 								} catch (\Throwable $e) {
 									$this->logger->debug('HttpClientLoggerMiddleware: CountingStream wrap failed: ' . $e->getMessage());
 								}
+							}
+							if (!$wrapped) {
+								TransferStatsStore::clear($reqId);
 							}
 						}
 					} catch (\Throwable $e) {
@@ -215,10 +193,7 @@ class HttpClientLoggerMiddleware {
 							@file_put_contents($plainFile, $plain, FILE_APPEND | LOCK_EX);
 						}
 
-						try {
-							TransferStatsStore::clear($reqId);
-						} catch (\Throwable $e) {
-						}
+						TransferStatsStore::clear($reqId);
 					} catch (\Throwable $e) {
 						$this->logger->debug('HttpClientLoggerMiddleware error-path failed: ' . $e->getMessage());
 					}
