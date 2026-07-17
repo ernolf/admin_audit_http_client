@@ -35,21 +35,8 @@
 		<DeprecatedMethod>
 			<errorLevel type="suppress">
 				<referencedMethod name="OCP\IContainer::registerService" />
-				<referencedMethod name="OCP\IServerContainer::getMemCacheFactory" />
 				<referencedMethod name="GuzzleHttp\Client::getConfig" />
 			</errorLevel>
 		</DeprecatedMethod>
-		<!-- TransferStatsStore's memcache path targets pre-NC-32 APIs and is
-		     fenced by try/catch at runtime. -->
-		<UndefinedInterfaceMethod>
-			<errorLevel type="suppress">
-				<file name="lib/Http/Client/Middleware/TransferStatsStore.php" />
-			</errorLevel>
-		</UndefinedInterfaceMethod>
-		<RedundantCondition>
-			<errorLevel type="suppress">
-				<file name="lib/Http/Client/Middleware/TransferStatsStore.php" />
-			</errorLevel>
-		</RedundantCondition>
 	</issueHandlers>
 </psalm>

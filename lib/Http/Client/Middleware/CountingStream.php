@@ -116,15 +116,7 @@ class CountingStream implements StreamInterface {
 	private function writeLog(bool $complete): void {
 		$this->logged = true;
 		try {
-			$handlerStats = null;
-			try {
-				$stored = TransferStatsStore::get($this->reqId);
-				if (is_array($stored)) {
-					$handlerStats = $stored['handlerStats'] ?? null;
-				}
-			} catch (\Throwable) {
-				// best-effort
-			}
+			$handlerStats = TransferStatsStore::get($this->reqId);
 
 			$compressed = null;
 			$encoding = 'none';
@@ -210,10 +202,7 @@ class CountingStream implements StreamInterface {
 				@file_put_contents($plainFile, $plain, FILE_APPEND | LOCK_EX);
 			}
 
-			try {
-				TransferStatsStore::clear($this->reqId);
-			} catch (\Throwable) {
-			}
+			TransferStatsStore::clear($this->reqId);
 		} catch (\Throwable $e) {
 			$this->logger->debug('CountingStream: writeLog failed: ' . $e->getMessage());
 		}

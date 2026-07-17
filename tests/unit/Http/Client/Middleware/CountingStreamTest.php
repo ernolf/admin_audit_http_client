@@ -111,7 +111,7 @@ class CountingStreamTest extends TestCase {
 
 	public function testMergesHandlerStatsFromStoreAndClearsIt(): void {
 		$reqId = uniqid('req', true);
-		TransferStatsStore::set($reqId, ['handlerStats' => ['size_download' => 5]]);
+		TransferStatsStore::set($reqId, ['size_download' => 5]);
 
 		$stream = $this->stream('hello', $reqId);
 		$stream->getContents();

@@ -9,7 +9,14 @@ declare(strict_types=1);
 
 namespace OCA\AdminAuditHttpClient\Tests\Unit\Http\Client\Middleware;
 
+use GuzzleHttp\Promise\FulfilledPromise;
+use GuzzleHttp\Psr7\Request;
+use GuzzleHttp\Psr7\Response;
+use GuzzleHttp\RequestOptions;
+use GuzzleHttp\TransferStats;
+use OCA\AdminAuditHttpClient\Http\Client\Middleware\CountingStream;
 use OCA\AdminAuditHttpClient\Http\Client\Middleware\HttpClientLoggerMiddleware;
+use OCA\AdminAuditHttpClient\Http\Client\Middleware\TransferStatsStore;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
 
@@ -78,6 +85,29 @@ class HttpClientLoggerMiddlewareTest extends TestCase {
 		$mw = $this->middleware(0, ['', '  spaced.test  ']);
 		$this->assertTrue($this->invokePrivate($mw, 'isExcluded', ['spaced.test']));
 		$this->assertFalse($this->invokePrivate($mw, 'isExcluded', ['anything.else']));
+	}
+
+	public function testStatsEntryIsClearedWhenResponseIsNotLogged(): void {
+		$mw = $this->middleware(1);
+		$reqId = 'req-leak-' . bin2hex(random_bytes(4));
+
+		$handler = $mw(function (Request $request, array $options) {
+			$response = new Response(200, [], 'streamed body');
+			if (isset($options[RequestOptions::ON_STATS])) {
+				$options[RequestOptions::ON_STATS](
+					new TransferStats($request, $response, 0.1, null, ['size_download' => 4]),
+				);
+			}
+			return new FulfilledPromise($response);
+		});
+
+		$response = $handler(
+			new Request('GET', 'https://example.com/'),
+			['nc_request_id' => $reqId],
+		)->wait();
+
+		$this->assertNotInstanceOf(CountingStream::class, $response->getBody());
+		$this->assertNull(TransferStatsStore::get($reqId));
 	}
 
 	public function testNormalizeHeadersWrapsScalarsAndStringifiesValues(): void {
