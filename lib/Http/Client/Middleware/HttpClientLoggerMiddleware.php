@@ -16,11 +16,25 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Log\LoggerInterface;
 
 class HttpClientLoggerMiddleware {
+	/**
+	 * Header values that would leak credentials to disk; always logged as
+	 * [redacted], with no opt-out.
+	 */
+	private const DEFAULT_REDACT_HEADERS = [
+		'authorization',
+		'proxy-authorization',
+		'cookie',
+		'set-cookie',
+		'x-api-key',
+		'x-auth-token',
+	];
+
 	private LoggerInterface $logger;
 	private string $logBaseDir;
 	private int $logLevel;
 	private string $logFormat;
 	private array $excludeDomains;
+	private array $redactHeaders;
 
 	public function __construct(
 		LoggerInterface $logger,
@@ -28,12 +42,21 @@ class HttpClientLoggerMiddleware {
 		int $logLevel = 0,
 		string $logFormat = 'both',
 		array $excludeDomains = [],
+		array $redactHeaders = [],
 	) {
 		$this->logger = $logger;
 		$this->logBaseDir = rtrim($logBaseDir, '/');
 		$this->logLevel = $logLevel;
 		$this->logFormat = $logFormat;
 		$this->excludeDomains = $excludeDomains;
+
+		$this->redactHeaders = self::DEFAULT_REDACT_HEADERS;
+		foreach ($redactHeaders as $name) {
+			$name = strtolower(trim((string)$name));
+			if ($name !== '' && !in_array($name, $this->redactHeaders, true)) {
+				$this->redactHeaders[] = $name;
+			}
+		}
 	}
 
 	public function __invoke(callable $handler): callable {
@@ -353,11 +376,17 @@ class HttpClientLoggerMiddleware {
 	private function compactHeaders(array $hdrs): array {
 		$out = [];
 		foreach ($hdrs as $k => $v) {
+			$lk = strtolower($k);
+
+			if (in_array($lk, $this->redactHeaders, true)) {
+				$out[$k] = '[redacted]';
+				continue;
+			}
+
 			if (!is_array($v)) {
 				$v = [$v];
 			}
 			$vals = array_map('strval', array_values($v));
-			$lk = strtolower($k);
 
 			if (count($vals) > 1) {
 				$out[$k] = $vals;
