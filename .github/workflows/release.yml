@@ -1,15 +1,18 @@
 # SPDX-FileCopyrightText: 2026 [ernolf] Raphael Gradenwitz <raphael.gradenwitz@googlemail.com>
-# SPDX-License-Identifier: AGPL-3.0-or-later
+# SPDX-License-Identifier: MIT
+#
+# ncmake release workflow - https://github.com/ernolf/ncmake
+#
+# Commit this file verbatim as .github/workflows/release.yml. It carries no
+# app-specific data: the shipped file set comes entirely from ncmake (keep model
+# + .nextcloudignore), so this workflow is identical across all ncmake apps.
 
 name: Release tarball
 
 # Builds the install tarball with ncmake and, when a release is published,
 # attaches it as a release asset. workflow_dispatch produces a downloadable
-# artifact for testing without publishing a release. The shipped file set comes
-# entirely from ncmake (keep model + .nextcloudignore) — this workflow carries
-# no file list of its own and is identical across all ncmake apps. No secrets,
-# no App Store upload: the store later only receives the download URL and a
-# signature.
+# artifact for testing without publishing a release. No secrets, no App Store
+# upload: the store later only receives the download URL and a signature.
 
 on:
   release:
