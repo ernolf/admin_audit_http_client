@@ -38,7 +38,7 @@ class HttpClientLoggerMiddleware {
 
 	public function __invoke(callable $handler): callable {
 		return function (RequestInterface $request, array $options) use ($handler) {
-			if (!empty($this->excludeDomains) && $this->isExcluded((string)$request->getUri()->getHost())) {
+			if (!empty($this->excludeDomains) && $this->isExcluded($request->getUri()->getHost())) {
 				return $handler($request, $options);
 			}
 
@@ -60,10 +60,7 @@ class HttpClientLoggerMiddleware {
 			if (!isset($options[RequestOptions::ON_STATS])) {
 				$options[RequestOptions::ON_STATS] = function (TransferStats $stats) use ($reqId): void {
 					try {
-						$h = $stats->getHandlerStats();
-						if (is_array($h)) {
-							TransferStatsStore::set($reqId, $h);
-						}
+						TransferStatsStore::set($reqId, $stats->getHandlerStats());
 					} catch (\Throwable $e) {
 						// best-effort: never break request handling
 					}
@@ -112,7 +109,7 @@ class HttpClientLoggerMiddleware {
 							$this->logger->debug('HttpClientLoggerMiddleware: failed to persist meta: ' . $e->getMessage());
 						}
 
-						$intStatus = (int)$meta['status'];
+						$intStatus = $meta['status'];
 
 						// Determine whether to write immediately (no body expected)
 						$immediate = false;
