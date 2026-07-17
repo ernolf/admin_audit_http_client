@@ -26,6 +26,7 @@ No UI, no routes — pure audit logging to /var/log/nextcloud/client/.
 	<donation type="paypal" title="Donate via PayPal">https://PayPal.Me/ernolf</donation>
 	<donation>https://github.com/sponsors/ernolf</donation>
 	<dependencies>
+		<php min-version="8.1" max-version="8.5"/>
 		<nextcloud min-version="32" max-version="34"/>
 	</dependencies>
 </info>
