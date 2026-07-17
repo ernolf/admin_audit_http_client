@@ -13,7 +13,6 @@ declare(strict_types=1);
 
 namespace {
 	class OC {
-		public static \OCP\IServerContainer $server;
 		public static string $SERVERROOT;
 	}
 }

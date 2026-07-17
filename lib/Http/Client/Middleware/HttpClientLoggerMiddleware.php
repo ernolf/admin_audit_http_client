@@ -35,6 +35,7 @@ class HttpClientLoggerMiddleware {
 	private string $logFormat;
 	private array $excludeDomains;
 	private array $redactHeaders;
+	private string $serverReqId;
 
 	public function __construct(
 		LoggerInterface $logger,
@@ -43,12 +44,14 @@ class HttpClientLoggerMiddleware {
 		string $logFormat = 'both',
 		array $excludeDomains = [],
 		array $redactHeaders = [],
+		string $serverReqId = '',
 	) {
 		$this->logger = $logger;
 		$this->logBaseDir = rtrim($logBaseDir, '/');
 		$this->logLevel = $logLevel;
 		$this->logFormat = $logFormat;
 		$this->excludeDomains = $excludeDomains;
+		$this->serverReqId = $serverReqId;
 
 		$this->redactHeaders = self::DEFAULT_REDACT_HEADERS;
 		foreach ($redactHeaders as $name) {
@@ -65,13 +68,19 @@ class HttpClientLoggerMiddleware {
 				return $handler($request, $options);
 			}
 
-			// Generate/extract request ID
-			try {
-				$reqId = $request->hasHeader('X-Nextcloud-ReqId')
-					? $request->getHeaderLine('X-Nextcloud-ReqId')
-					: (isset($options['nc_request_id']) ? (string)$options['nc_request_id'] : bin2hex(random_bytes(6)));
-			} catch (\Throwable $e) {
-				$reqId = isset($options['nc_request_id']) ? (string)$options['nc_request_id'] : uniqid('', true);
+			// Request ID: reuse a caller-provided header, otherwise derive a
+			// unique ID per outgoing request. Prefixing the server request ID
+			// makes log entries correlatable with nextcloud.log while the
+			// random suffix keeps concurrent outgoing requests apart.
+			if ($request->hasHeader('X-Nextcloud-ReqId')) {
+				$reqId = $request->getHeaderLine('X-Nextcloud-ReqId');
+			} else {
+				try {
+					$suffix = bin2hex(random_bytes(4));
+				} catch (\Throwable $e) {
+					$suffix = uniqid('', true);
+				}
+				$reqId = $this->serverReqId === '' ? $suffix : $this->serverReqId . '-' . $suffix;
 			}
 
 			// Inject X-Nextcloud-ReqId header so remote servers can correlate

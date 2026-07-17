@@ -16,6 +16,7 @@ use OCP\AppFramework\Bootstrap\IBootstrap;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
 use OCP\Http\Client\IClientService;
 use OCP\IConfig;
+use OCP\IRequest;
 use Psr\Log\LoggerInterface;
 
 class Application extends App implements IBootstrap {
@@ -24,23 +25,18 @@ class Application extends App implements IBootstrap {
 	}
 
 	public function register(IRegistrationContext $context): void {
-		//		Prepared for future use — see HandlerStackReadyListener.php and
-		//		https://gist.github.com/ernolf/ecd9a66610be46f2afff840b1c70d513
-		//		$context->registerEventListener(
-		//			\OCA\AdminAuditHttpClient\Event\HttpClientHandlerStackReadyEvent::class,
-		//			\OCA\AdminAuditHttpClient\Listener\HandlerStackReadyListener::class
-		//		);
 	}
 
 	public function boot(IBootContext $context): void {
-		$server = \OC::$server;
+		$server = $context->getServerContainer();
 		$inner = $server->get(IClientService::class);
 		$logger = $context->getAppContainer()->get(LoggerInterface::class);
 		$config = $server->get(IConfig::class);
+		$request = $server->get(IRequest::class);
 
 		$server->registerService(
 			IClientService::class,
-			fn () => new LoggingClientService($inner, $logger, $config)
+			fn () => new LoggingClientService($inner, $logger, $config, $request)
 		);
 	}
 }
