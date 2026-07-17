@@ -1,4 +1,5 @@
 <?php
+
 /**
  * SPDX-FileCopyrightText: 2026 [ernolf] Raphael Gradenwitz
  * SPDX-License-Identifier: AGPL-3.0-or-later
@@ -19,7 +20,8 @@ class LoggingClientService implements IClientService {
 		private IClientService $inner,
 		private LoggerInterface $logger,
 		private IConfig $config,
-	) {}
+	) {
+	}
 
 	public function newClient(): IClient {
 		$client = $this->inner->newClient();

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * SPDX-FileCopyrightText: 2026 [ernolf] Raphael Gradenwitz
  * SPDX-License-Identifier: AGPL-3.0-or-later
@@ -27,7 +28,8 @@ class CountingStream implements StreamInterface {
 		private string $logBaseDir,
 		private LoggerInterface $logger,
 		private string $logFormat = 'both',
-	) {}
+	) {
+	}
 
 	public function __destruct() {
 		if (!$this->logged) {
@@ -125,8 +127,8 @@ class CountingStream implements StreamInterface {
 			}
 
 			$compressed = null;
-			$encoding   = 'none';
-			$ratio      = null;
+			$encoding = 'none';
+			$ratio = null;
 
 			if (is_array($handlerStats) && !empty($handlerStats['size_download'])) {
 				$compressed = (int)round($handlerStats['size_download']);
@@ -145,7 +147,7 @@ class CountingStream implements StreamInterface {
 				$ratio = round($compressed / $decompressed, 2);
 			}
 
-			$reqHdrs     = $this->meta['requestHeaders'] ?? [];
+			$reqHdrs = $this->meta['requestHeaders'] ?? [];
 			$headerNames = '-';
 			if (!empty($reqHdrs) && is_array($reqHdrs)) {
 				$headerNames = implode(',', array_keys($reqHdrs));
@@ -156,33 +158,33 @@ class CountingStream implements StreamInterface {
 			$userAgent = '-';
 			foreach (['User-Agent', 'user-agent'] as $uaKey) {
 				if (isset($reqHdrs[$uaKey])) {
-					$ua        = $reqHdrs[$uaKey];
+					$ua = $reqHdrs[$uaKey];
 					$userAgent = is_array($ua) ? ($ua[0] ?? '-') : (string)$ua;
 					break;
 				}
 			}
 
 			$merged = [
-				'reqId'            => $this->reqId,
-				'time'             => $this->meta['time'],
-				'method'           => $this->meta['method'],
-				'uri'              => $this->meta['uri'],
-				'status'           => $this->meta['status'],
-				'http'             => $this->meta['http'],
-				'requestHeaders'   => $this->meta['requestHeaders'],
-				'responseHeaders'  => $this->meta['responseHeaders'],
-				'handlerStats'     => is_array($handlerStats) ? $handlerStats : [],
+				'reqId' => $this->reqId,
+				'time' => $this->meta['time'],
+				'method' => $this->meta['method'],
+				'uri' => $this->meta['uri'],
+				'status' => $this->meta['status'],
+				'http' => $this->meta['http'],
+				'requestHeaders' => $this->meta['requestHeaders'],
+				'responseHeaders' => $this->meta['responseHeaders'],
+				'handlerStats' => is_array($handlerStats) ? $handlerStats : [],
 				'compressionStats' => [
-					'encoding'           => $encoding,
-					'compressed_bytes'   => $compressed,
+					'encoding' => $encoding,
+					'compressed_bytes' => $compressed,
 					'decompressed_bytes' => $decompressed,
-					'ratio'              => $ratio,
+					'ratio' => $ratio,
 				],
-				'stream_consumed'  => $complete,
+				'stream_consumed' => $complete,
 			];
 
 			$incomplete = $complete ? '' : ' [stream-incomplete]';
-			$plain      = sprintf(
+			$plain = sprintf(
 				"%s %s %s %s %s %s compressed=%s decompressed=%s ratio=%s encoding=%s Hdrs=%s \"%s\"%s\n",
 				$this->reqId,
 				$this->meta['time'],

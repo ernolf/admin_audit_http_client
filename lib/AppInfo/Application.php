@@ -1,4 +1,5 @@
 <?php
+
 /**
  * SPDX-FileCopyrightText: 2026 [ernolf] Raphael Gradenwitz
  * SPDX-License-Identifier: AGPL-3.0-or-later
@@ -23,23 +24,23 @@ class Application extends App implements IBootstrap {
 	}
 
 	public function register(IRegistrationContext $context): void {
-//		Prepared for future use — see HandlerStackReadyListener.php and
-//		https://gist.github.com/ernolf/ecd9a66610be46f2afff840b1c70d513
-//		$context->registerEventListener(
-//			\OCA\AdminAuditHttpClient\Event\HttpClientHandlerStackReadyEvent::class,
-//			\OCA\AdminAuditHttpClient\Listener\HandlerStackReadyListener::class
-//		);
+		//		Prepared for future use — see HandlerStackReadyListener.php and
+		//		https://gist.github.com/ernolf/ecd9a66610be46f2afff840b1c70d513
+		//		$context->registerEventListener(
+		//			\OCA\AdminAuditHttpClient\Event\HttpClientHandlerStackReadyEvent::class,
+		//			\OCA\AdminAuditHttpClient\Listener\HandlerStackReadyListener::class
+		//		);
 	}
 
 	public function boot(IBootContext $context): void {
 		$server = \OC::$server;
-		$inner  = $server->get(IClientService::class);
+		$inner = $server->get(IClientService::class);
 		$logger = $context->getAppContainer()->get(LoggerInterface::class);
 		$config = $server->get(IConfig::class);
 
 		$server->registerService(
 			IClientService::class,
-			fn() => new LoggingClientService($inner, $logger, $config)
+			fn () => new LoggingClientService($inner, $logger, $config)
 		);
 	}
 }

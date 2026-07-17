@@ -1,4 +1,5 @@
 <?php
+
 /**
  * SPDX-FileCopyrightText: 2026 [ernolf] Raphael Gradenwitz
  * SPDX-License-Identifier: AGPL-3.0-or-later
@@ -12,7 +13,7 @@ class LogPathHelper {
 	/**
 	 * Derives per-host log file paths from request meta info.
 	 *
-	 * @param array $meta    Minimal: 'uri' or 'requestHeaders' => ['Host' => 'host[:port]']
+	 * @param array $meta Minimal: 'uri' or 'requestHeaders' => ['Host' => 'host[:port]']
 	 * @param string $baseDir base directory for per-host log files
 	 * @param string|null $reqId unused, reserved for future use
 	 * @return array [jsonPath, plainPath]
@@ -64,7 +65,7 @@ class LogPathHelper {
 			@mkdir($baseDir, 0755, true);
 		}
 
-		$jsonPath  = $baseDir . '/' . $token . '.json';
+		$jsonPath = $baseDir . '/' . $token . '.json';
 		$plainPath = $baseDir . '/' . $token . '.log';
 
 		return [$jsonPath, $plainPath];

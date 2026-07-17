@@ -1,4 +1,5 @@
 <?php
+
 /**
  * SPDX-FileCopyrightText: 2026 [ernolf] Raphael Gradenwitz
  * SPDX-License-Identifier: AGPL-3.0-or-later
@@ -10,10 +11,9 @@ namespace OCA\AdminAuditHttpClient\Http\Client\Middleware;
 
 use GuzzleHttp\RequestOptions;
 use GuzzleHttp\TransferStats;
-use Psr\Log\LoggerInterface;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\StreamInterface;
+use Psr\Log\LoggerInterface;
 
 class HttpClientLoggerMiddleware {
 	private LoggerInterface $logger;
@@ -29,10 +29,10 @@ class HttpClientLoggerMiddleware {
 		string $logFormat = 'both',
 		array $excludeDomains = [],
 	) {
-		$this->logger         = $logger;
-		$this->logBaseDir     = rtrim($logBaseDir, '/');
-		$this->logLevel       = $logLevel;
-		$this->logFormat      = $logFormat;
+		$this->logger = $logger;
+		$this->logBaseDir = rtrim($logBaseDir, '/');
+		$this->logLevel = $logLevel;
+		$this->logFormat = $logFormat;
 		$this->excludeDomains = $excludeDomains;
 	}
 
@@ -90,13 +90,13 @@ class HttpClientLoggerMiddleware {
 						}
 
 						$meta = [
-							'reqId'           => $reqId,
-							'time'            => date('c'),
-							'method'          => $request->getMethod(),
-							'uri'             => (string)$request->getUri(),
-							'status'          => $response->getStatusCode(),
-							'http'            => 'HTTP/' . $response->getProtocolVersion(),
-							'requestHeaders'  => $this->compactHeaders($reqHeaders),
+							'reqId' => $reqId,
+							'time' => date('c'),
+							'method' => $request->getMethod(),
+							'uri' => (string)$request->getUri(),
+							'status' => $response->getStatusCode(),
+							'http' => 'HTTP/' . $response->getProtocolVersion(),
+							'requestHeaders' => $this->compactHeaders($reqHeaders),
 							'responseHeaders' => $this->compactHeaders($respHeaders),
 						];
 
@@ -164,13 +164,13 @@ class HttpClientLoggerMiddleware {
 				function ($reason) use ($request, $reqHeaders, $reqId) {
 					try {
 						$entry = [
-							'reqId'          => $reqId,
-							'time'           => date('c'),
-							'method'         => $request->getMethod(),
-							'uri'            => (string)$request->getUri(),
-							'error'          => is_object($reason) ? get_class($reason) : (string)$reason,
+							'reqId' => $reqId,
+							'time' => date('c'),
+							'method' => $request->getMethod(),
+							'uri' => (string)$request->getUri(),
+							'error' => is_object($reason) ? get_class($reason) : (string)$reason,
 							'requestHeaders' => $this->compactHeaders($reqHeaders),
-							'event'          => 'error',
+							'event' => 'error',
 						];
 
 						$plain = sprintf(
@@ -183,7 +183,7 @@ class HttpClientLoggerMiddleware {
 						);
 
 						$metaForPaths = [
-							'uri'            => (string)$request->getUri(),
+							'uri' => (string)$request->getUri(),
 							'requestHeaders' => $this->compactHeaders($reqHeaders),
 						];
 						[$jsonFile, $plainFile] = LogPathHelper::getPathsFromMeta($metaForPaths, $this->logBaseDir, $reqId);
@@ -214,10 +214,10 @@ class HttpClientLoggerMiddleware {
 
 	private function writeImmediate(string $reqId, array $meta, array $respHeaders, ?array $handlerStats): void {
 		try {
-			$compressed   = null;
+			$compressed = null;
 			$decompressed = 0;
-			$encoding     = 'none';
-			$ratio        = null;
+			$encoding = 'none';
+			$ratio = null;
 
 			if (is_array($handlerStats) && !empty($handlerStats['size_download'])) {
 				$compressed = (int)round($handlerStats['size_download']);
@@ -252,24 +252,24 @@ class HttpClientLoggerMiddleware {
 			}
 
 			$merged = [
-				'reqId'            => $reqId,
-				'time'             => $meta['time'],
-				'method'           => $meta['method'],
-				'uri'              => $meta['uri'],
-				'status'           => $meta['status'],
-				'http'             => $meta['http'],
-				'requestHeaders'   => $meta['requestHeaders'],
-				'responseHeaders'  => $meta['responseHeaders'],
-				'handlerStats'     => is_array($handlerStats) ? $handlerStats : [],
+				'reqId' => $reqId,
+				'time' => $meta['time'],
+				'method' => $meta['method'],
+				'uri' => $meta['uri'],
+				'status' => $meta['status'],
+				'http' => $meta['http'],
+				'requestHeaders' => $meta['requestHeaders'],
+				'responseHeaders' => $meta['responseHeaders'],
+				'handlerStats' => is_array($handlerStats) ? $handlerStats : [],
 				'compressionStats' => [
-					'encoding'           => $encoding,
-					'compressed_bytes'   => $compressed,
+					'encoding' => $encoding,
+					'compressed_bytes' => $compressed,
 					'decompressed_bytes' => $decompressed,
-					'ratio'              => $ratio,
+					'ratio' => $ratio,
 				],
 			];
 
-			$reqHdrs     = $merged['requestHeaders'] ?? [];
+			$reqHdrs = $merged['requestHeaders'] ?? [];
 			$headerNames = '-';
 			if (!empty($reqHdrs) && is_array($reqHdrs)) {
 				$headerNames = implode(',', array_keys($reqHdrs));
@@ -317,8 +317,8 @@ class HttpClientLoggerMiddleware {
 
 	private function shouldLog(int $status): bool {
 		return match ($this->logLevel) {
-			2       => $status >= 500,
-			1       => $status >= 400,
+			2 => $status >= 500,
+			1 => $status >= 400,
 			default => true,
 		};
 	}
@@ -360,7 +360,7 @@ class HttpClientLoggerMiddleware {
 				$v = [$v];
 			}
 			$vals = array_map('strval', array_values($v));
-			$lk   = strtolower($k);
+			$lk = strtolower($k);
 
 			if (count($vals) > 1) {
 				$out[$k] = $vals;

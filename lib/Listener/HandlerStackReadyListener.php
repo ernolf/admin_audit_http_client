@@ -1,4 +1,5 @@
 <?php
+
 /**
  * SPDX-FileCopyrightText: 2026 [ernolf] Raphael Gradenwitz
  * SPDX-License-Identifier: AGPL-3.0-or-later
@@ -30,12 +31,13 @@ use Psr\Log\LoggerInterface;
 class HandlerStackReadyListener {
 	public function __construct(
 		private LoggerInterface $logger,
-	) {}
+	) {
+	}
 
 	public function handle(object $event): void {
-//		$event->getStack()->unshift(
-//			new HttpClientLoggerMiddleware($this->logger),
-//			'admin_audit_http_client'
-//		);
+		//		$event->getStack()->unshift(
+		//			new HttpClientLoggerMiddleware($this->logger),
+		//			'admin_audit_http_client'
+		//		);
 	}
 }
