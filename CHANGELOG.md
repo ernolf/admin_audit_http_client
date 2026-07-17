@@ -28,3 +28,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `HandlerStackReadyListener`: prepared for future event-based injection once a `HttpClientHandlerStackReadyEvent` is available in Nextcloud core
 - `logdir_audit_http_client` config key with automatic fallback chain: explicit override → sibling of `logfile_audit` → sibling of `logfile` → `<datadirectory>/admin_audit_http_client_logs/`
 - Log entries contain: request ID (`X-Nextcloud-ReqId`), timestamp, method, URI, HTTP version, status, request headers, response headers, cURL handler stats (`size_download`, `speed_download`, `total_time`, etc.), compression stats (`encoding`, `compressed_bytes`, `decompressed_bytes`, `ratio`)
+
+[0.2.0]: https://github.com/ernolf/admin_audit_http_client/releases/tag/v0.2.0
+[0.1.0]: https://github.com/ernolf/admin_audit_http_client/releases/tag/v0.1.0

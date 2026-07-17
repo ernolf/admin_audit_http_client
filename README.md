@@ -5,15 +5,15 @@
 
 # admin_audit_http_client
 
+[![REUSE status](https://api.reuse.software/badge/github.com/ernolf/admin_audit_http_client)](https://api.reuse.software/info/github.com/ernolf/admin_audit_http_client)
+[![Latest release](https://img.shields.io/github/v/release/ernolf/admin_audit_http_client?sort=semver&color=0082c9)](https://github.com/ernolf/admin_audit_http_client/releases/latest)
+[![Built with ncmake](https://img.shields.io/badge/built%20with-ncmake-0082c9)](https://github.com/ernolf/ncmake)
+
 Nextcloud app that logs all outgoing HTTP requests made by Nextcloud's built-in HTTP client (`OC\Http\Client\Client`, Guzzle-based).
 
----
-> [!IMPORTANT]
-> **This app is in early development.**
-> It is not available in the Nextcloud App Store — [installation is manual only](#installation).
-> It has no built-in log rotation yet. Monitor log file sizes and rotate manually or via the system's logrotate daemon until log rotation is implemented.
+> [!NOTE]
+> The app has no built-in log rotation. Monitor log file sizes and rotate them with the system's logrotate daemon.
 
----
 ## Configuration (config/config.php)
 
 All settings are optional.
@@ -62,10 +62,12 @@ Selects the log output format. Default: `'both'`.
 | `'plain'` | `<host>.log` — one plain-text line per request |
 | `'both'` | both files |
 
+Every entry starts with the request ID: the ID of the server request that triggered the outgoing call (the same ID as in `nextcloud.log`), followed by a random per-request suffix. The ID is also sent to the remote server as `X-Nextcloud-ReqId` header; a caller-supplied header is used unchanged.
+
 Plain-text example:
 
 ```
-a3f9bc 2026-05-05T14:23:01+00:00 GET https://example.com/feed HTTP/2 200 compressed=4821 decompressed=18944 ratio=0.25 encoding=br Hdrs=Host,Accept-Encoding,User-Agent "Nextcloud/32 ..."
+67527c3ff4b8-a3f9bc12 2026-05-05T14:23:01+00:00 GET https://example.com/feed HTTP/2 200 compressed=4821 decompressed=18944 ratio=0.25 encoding=br Hdrs=Host,Accept-Encoding,User-Agent "Nextcloud/32 ..."
 ```
 
 ```php
@@ -98,119 +100,53 @@ The following headers are always redacted and cannot be un-redacted: `Authorizat
 
 ## Installation
 
-No npm, no composer, no build step required.
+### From a release tarball
 
-> [!NOTE]
-> Installation is typically done as root or a privileged user, not as the web server user itself. After installing, set ownership to match your web server user:
->
-> | Distribution | Web server user |
-> |---|---|
-> | Debian / Ubuntu | `www-data` |
-> | CentOS / RHEL / Fedora (Apache) | `apache` |
-> | CentOS / RHEL / Fedora (nginx) | `nginx` |
-> | Arch Linux | `http` |
+Download the latest release tarball from the [releases page](https://github.com/ernolf/admin_audit_http_client/releases) and extract it into your Nextcloud `apps/` directory, so the app lives at `apps/admin_audit_http_client/`. Then set ownership to your web server user and enable it:
 
-### From a release tarball (recommended)
+```sh
+tar -xzf admin_audit_http_client-x.y.z.tar.gz -C /path/to/nextcloud/apps/
+chown -R www-data:www-data /path/to/nextcloud/apps/admin_audit_http_client
+occ app:enable admin_audit_http_client
+```
 
-Download the latest release from the [Releases page](https://github.com/ernolf/admin_audit_http_client/releases):
+### From source
 
-* <details>
-  <summary>Installation script</summary>
+The build is driven by [ncmake](https://github.com/ernolf/ncmake) and runs entirely in throwaway containers, so the only requirement is **[podman](https://podman.io/)** (or Docker) — no PHP toolchain on the host. The first `make` fetches the shared ncmake Makefile once into `~/.cache/ncmake/`. Clone and build the tarball:
 
-  ```bash
-  TAG=v0.2.0
-  NCDIR=/path/to/nextcloud
-  HTUSER=www-data
-  cd ${NCDIR}/apps
-  sudo curl -L https://github.com/ernolf/admin_audit_http_client/releases/download/${TAG}/admin_audit_http_client-${TAG}.tar.gz | sudo tar -xz
-  sudo chown -R ${HTUSER}: admin_audit_http_client
-  sudo -u ${HTUSER} php ${NCDIR}/occ app:enable admin_audit_http_client
-  ```
-  </details>
+```sh
+git clone https://github.com/ernolf/admin_audit_http_client.git
+cd admin_audit_http_client
+make build && make dist
+```
 
-### Nextcloud All-in-One (AIO)
+This writes `build/artifacts/dist/admin_audit_http_client-x.y.z.tar.gz`. Install it exactly like a release tarball above.
 
-* <details>
-  <summary>Installation script</summary>
+If your Nextcloud is on the same machine (or reachable over SSH), you can skip the tarball and deploy straight into its `apps/` directory — `OCC=1` runs the full refresh cycle (`app:disable`, sync, `chown`, `app:enable`) in one go:
 
-  ```bash
-  TAG=v0.2.0
-  curl -L https://github.com/ernolf/admin_audit_http_client/releases/download/${TAG}/admin_audit_http_client-${TAG}.tar.gz \
-    | sudo docker exec -i --user www-data nextcloud-aio-nextcloud tar -xz -C /var/www/html/custom_apps/
-  sudo docker exec --user www-data -it nextcloud-aio-nextcloud php occ app:enable admin_audit_http_client
-  ```
-  </details>
+```sh
+make build && make rsync TARGET=/path/to/nextcloud/apps/ OCC=1
+```
 
-### Via git clone (development / always latest)
+`TARGET` is the `apps/` parent directory and may be a local path or a remote `user@host:` path.
 
-* <details>
-  <summary>Installation script</summary>
+For **Nextcloud All-in-One** (or any dockerized instance whose filesystem is not reachable from outside), `make cp` deploys into the running container instead:
 
-  ```bash
-  NCDIR=/path/to/nextcloud
-  HTUSER=www-data
-  cd ${NCDIR}/apps
-  git clone https://github.com/ernolf/admin_audit_http_client.git
-  sudo chown -R ${HTUSER}: admin_audit_http_client
-  sudo -u ${HTUSER} php ${NCDIR}/occ app:enable admin_audit_http_client
-  ```
-  </details>
+```sh
+make build && make cp TARGET=nextcloud-aio-nextcloud:/var/www/html/custom_apps/ OCC=1
+```
 
 ### Update
 
-Remove the old directory and reinstall — this avoids leftover files from previous versions.
-
-**From a release tarball:**
-
-* <details>
-  <summary>Update script</summary>
-
-  ```bash
-  TAG=v0.2.0
-  NCDIR=/path/to/nextcloud
-  HTUSER=www-data
-  cd ${NCDIR}/apps
-  sudo -u ${HTUSER} php ${NCDIR}/occ app:remove admin_audit_http_client
-  sudo curl -L https://github.com/ernolf/admin_audit_http_client/releases/download/${TAG}/admin_audit_http_client-${TAG}.tar.gz | sudo tar -xz
-  sudo chown -R ${HTUSER}: admin_audit_http_client
-  sudo -u ${HTUSER} php ${NCDIR}/occ app:enable admin_audit_http_client
-  ```
-  </details>
-
-### Nextcloud All-in-One (AIO)
-
-* <details>
-  <summary>Installation script</summary>
-
-  ```bash
-  TAG=v0.2.0
-  sudo docker exec --user www-data -it nextcloud-aio-nextcloud php occ app:remove admin_audit_http_client
-  curl -L https://github.com/ernolf/admin_audit_http_client/releases/download/${TAG}/admin_audit_http_client-${TAG}.tar.gz \
-    | sudo docker exec -i --user www-data nextcloud-aio-nextcloud tar -xz -C /var/www/html/custom_apps/
-  sudo docker exec --user www-data -it nextcloud-aio-nextcloud php occ app:enable admin_audit_http_client
-  ```
-  </details>
-
-**Via git clone:**
-
-* <details>
-  <summary>Update script</summary>
-
-  ```bash
-  NCDIR=/path/to/nextcloud
-  HTUSER=www-data
-  cd ${NCDIR}/apps
-  sudo -u ${HTUSER} php ${NCDIR}/occ app:remove admin_audit_http_client
-  git clone https://github.com/ernolf/admin_audit_http_client.git
-  sudo chown -R ${HTUSER}: admin_audit_http_client
-  sudo -u ${HTUSER} php ${NCDIR}/occ app:enable admin_audit_http_client
-  ```
-  </details>
+- Tarball installations: run `occ app:remove admin_audit_http_client`, then install the new tarball as above — this avoids leftover files from previous versions.
+- `make rsync`/`make cp` deployments: simply run the same command again after a `git pull`; the sync replaces the app directory as a whole.
 
 ## Roadmap
 
-Architecture, data flow, planned features, and configuration options are documented in the
-[Architecture & Roadmap](https://gist.github.com/ernolf/ecd9a66610be46f2afff840b1c70d513).
+- **Event-based injection:** the middleware is injected via reflection into the private Guzzle client of `OC\Http\Client\Client`, because core dispatches no event that exposes the handler stack. Nextcloud 35 added an optional `$handler` parameter to `IClientService::newClient()`; a core-side `HttpClientHandlerStackReadyEvent` (or a comparable extension point) would allow dropping the reflection entirely. Until then the server-matrix CI job also runs against `master` and fails the moment core changes the private structure.
+- **Built-in log rotation** (size/age based) instead of relying on the system's logrotate.
+
+Background and data-flow notes: [Architecture & Roadmap](https://gist.github.com/ernolf/ecd9a66610be46f2afff840b1c70d513).
 
 ## Credits
 
