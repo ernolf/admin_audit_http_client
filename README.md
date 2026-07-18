@@ -98,6 +98,32 @@ The following headers are always redacted and cannot be un-redacted: `Authorizat
 ],
 ```
 
+### `audit_http_client_redact_params`
+
+Additional query parameter names whose values are logged as `[redacted]` in the `uri` field. Matching is case-insensitive; the parameter name and the rest of the URI stay unchanged. Default: `[]`.
+
+The following parameters are always redacted and cannot be un-redacted: `access_token`, `api_key`, `apikey`, `auth`, `client_secret`, `password`, `secret`, `signature`, `token`, `X-Amz-Credential`, `X-Amz-Security-Token`, `X-Amz-Signature`.
+
+```php
+'audit_http_client_redact_params' => [
+    'session_key',
+],
+```
+
+### `audit_http_client_redact_path_patterns`
+
+Additional PCRE patterns whose matches in the URI **path** are logged as `[redacted]` — for secrets that live in the path instead of the query string. Default: `[]`.
+
+The following pattern is always applied and cannot be removed: `#(?<=/)private-[^/]+#` — it covers Google's secret iCal addresses (`…/ical/<user>/private-<hash>/basic.ics`), where the hash is the only protection of the calendar.
+
+```php
+'audit_http_client_redact_path_patterns' => [
+    '#(?<=/)key-[0-9a-f]+#',
+],
+```
+
+Invalid patterns are skipped. To skip logging for a host entirely, use [`audit_http_client_exclude_domains`](#audit_http_client_exclude_domains) instead.
+
 ## Installation
 
 This app is not yet in the App Store. It is built with [ncmake](https://github.com/ernolf/ncmake). To build and install it from source — release tarball, `make rsync` or `make cp` — see the [installation guide](https://github.com/ernolf/ncmake/blob/main/doc/INSTALL.md).

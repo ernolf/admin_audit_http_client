@@ -29,12 +29,42 @@ class HttpClientLoggerMiddleware {
 		'x-auth-token',
 	];
 
+	/**
+	 * Query parameter values that would leak credentials to disk when the URI
+	 * is logged; always logged as [redacted], with no opt-out.
+	 */
+	private const DEFAULT_REDACT_PARAMS = [
+		'access_token',
+		'api_key',
+		'apikey',
+		'auth',
+		'client_secret',
+		'password',
+		'secret',
+		'signature',
+		'token',
+		'x-amz-credential',
+		'x-amz-security-token',
+		'x-amz-signature',
+	];
+
+	/**
+	 * PCRE patterns whose matches in the URI path are logged as [redacted].
+	 * Google marks its secret iCal URLs with a "private-<hash>" path segment;
+	 * anyone holding such a URL can read the calendar.
+	 */
+	private const DEFAULT_REDACT_PATH_PATTERNS = [
+		'#(?<=/)private-[^/]+#',
+	];
+
 	private LoggerInterface $logger;
 	private string $logBaseDir;
 	private int $logLevel;
 	private string $logFormat;
 	private array $excludeDomains;
 	private array $redactHeaders;
+	private array $redactParams;
+	private array $redactPathPatterns;
 	private string $serverReqId;
 
 	public function __construct(
@@ -44,6 +74,8 @@ class HttpClientLoggerMiddleware {
 		string $logFormat = 'both',
 		array $excludeDomains = [],
 		array $redactHeaders = [],
+		array $redactParams = [],
+		array $redactPathPatterns = [],
 		string $serverReqId = '',
 	) {
 		$this->logger = $logger;
@@ -53,13 +85,28 @@ class HttpClientLoggerMiddleware {
 		$this->excludeDomains = $excludeDomains;
 		$this->serverReqId = $serverReqId;
 
-		$this->redactHeaders = self::DEFAULT_REDACT_HEADERS;
-		foreach ($redactHeaders as $name) {
-			$name = strtolower(trim((string)$name));
-			if ($name !== '' && !in_array($name, $this->redactHeaders, true)) {
-				$this->redactHeaders[] = $name;
+		$this->redactHeaders = $this->mergeRedactList(self::DEFAULT_REDACT_HEADERS, $redactHeaders);
+		$this->redactParams = $this->mergeRedactList(self::DEFAULT_REDACT_PARAMS, $redactParams);
+
+		// Patterns are regexes: merge verbatim, without case normalization.
+		$this->redactPathPatterns = self::DEFAULT_REDACT_PATH_PATTERNS;
+		foreach ($redactPathPatterns as $pattern) {
+			$pattern = (string)$pattern;
+			if ($pattern !== '' && !in_array($pattern, $this->redactPathPatterns, true)) {
+				$this->redactPathPatterns[] = $pattern;
 			}
 		}
+	}
+
+	private function mergeRedactList(array $defaults, array $extra): array {
+		$merged = $defaults;
+		foreach ($extra as $name) {
+			$name = strtolower(trim((string)$name));
+			if ($name !== '' && !in_array($name, $merged, true)) {
+				$merged[] = $name;
+			}
+		}
+		return $merged;
 	}
 
 	public function __invoke(callable $handler): callable {
@@ -110,7 +157,7 @@ class HttpClientLoggerMiddleware {
 							'reqId' => $reqId,
 							'time' => date('c'),
 							'method' => $request->getMethod(),
-							'uri' => (string)$request->getUri(),
+							'uri' => $this->redactUri((string)$request->getUri()),
 							'status' => $response->getStatusCode(),
 							'http' => 'HTTP/' . $response->getProtocolVersion(),
 							'requestHeaders' => $this->compactHeaders($reqHeaders),
@@ -175,13 +222,16 @@ class HttpClientLoggerMiddleware {
 				},
 				function ($reason) use ($request, $reqHeaders, $reqId) {
 					try {
+						$uri = $this->redactUri((string)$request->getUri());
+						$reqCompact = $this->compactHeaders($reqHeaders);
+
 						$entry = [
 							'reqId' => $reqId,
 							'time' => date('c'),
 							'method' => $request->getMethod(),
-							'uri' => (string)$request->getUri(),
+							'uri' => $uri,
 							'error' => is_object($reason) ? get_class($reason) : (string)$reason,
-							'requestHeaders' => $this->compactHeaders($reqHeaders),
+							'requestHeaders' => $reqCompact,
 							'event' => 'error',
 						];
 
@@ -190,13 +240,13 @@ class HttpClientLoggerMiddleware {
 							$reqId,
 							date('c'),
 							$request->getMethod(),
-							(string)$request->getUri(),
+							$uri,
 							is_object($reason) ? get_class($reason) : (string)$reason
 						);
 
 						$metaForPaths = [
-							'uri' => (string)$request->getUri(),
-							'requestHeaders' => $this->compactHeaders($reqHeaders),
+							'uri' => $uri,
+							'requestHeaders' => $reqCompact,
 						];
 						[$jsonFile, $plainFile] = LogPathHelper::getPathsFromMeta($metaForPaths, $this->logBaseDir, $reqId);
 
@@ -344,6 +394,53 @@ class HttpClientLoggerMiddleware {
 			}
 		}
 		return false;
+	}
+
+	/**
+	 * Redacts credentials from a URI before it is logged: values of
+	 * credential-bearing query parameters become [redacted] (names keep their
+	 * original spelling, matching is case-insensitive, parameters without a
+	 * value and the fragment are left untouched), and path portions matching
+	 * the configured patterns are replaced likewise. Invalid patterns are
+	 * skipped.
+	 */
+	private function redactUri(string $uri): string {
+		$qPos = strpos($uri, '?');
+		$base = $qPos === false ? $uri : substr($uri, 0, $qPos);
+
+		foreach ($this->redactPathPatterns as $pattern) {
+			$replaced = @preg_replace($pattern, '[redacted]', $base);
+			if (is_string($replaced)) {
+				$base = $replaced;
+			}
+		}
+
+		if ($qPos === false) {
+			return $base;
+		}
+
+		$query = substr($uri, $qPos + 1);
+
+		$fragment = '';
+		$fPos = strpos($query, '#');
+		if ($fPos !== false) {
+			$fragment = substr($query, $fPos);
+			$query = substr($query, 0, $fPos);
+		}
+
+		$pairs = explode('&', $query);
+		foreach ($pairs as $i => $pair) {
+			$eq = strpos($pair, '=');
+			if ($eq === false) {
+				continue;
+			}
+			$name = substr($pair, 0, $eq);
+			if (in_array(strtolower(rawurldecode($name)), $this->redactParams, true)) {
+				$pairs[$i] = $name . '=[redacted]';
+			}
+		}
+
+		return $base . '?' . implode('&', $pairs) . $fragment;
 	}
 
 	private function normalizeHeaders(array $hdrs): array {
