@@ -34,15 +34,20 @@ class LogPathHelper {
 			}
 		}
 
-		if ($host === null && !empty($meta['requestHeaders']['Host'])) {
-			$hostHeader = $meta['requestHeaders']['Host'];
-			$hostHeader = is_array($hostHeader) ? ($hostHeader[0] ?? '') : (string)$hostHeader;
-			if ($hostHeader !== '') {
-				if (strpos($hostHeader, ':') !== false) {
-					[$host, $port] = explode(':', $hostHeader, 2) + [1 => null];
-				} else {
-					$host = $hostHeader;
+		if ($host === null && !empty($meta['requestHeaders']) && is_array($meta['requestHeaders'])) {
+			foreach ($meta['requestHeaders'] as $name => $value) {
+				if (strtolower((string)$name) !== 'host') {
+					continue;
 				}
+				$hostHeader = is_array($value) ? ($value[0] ?? '') : (string)$value;
+				if ($hostHeader !== '') {
+					if (strpos($hostHeader, ':') !== false) {
+						[$host, $port] = explode(':', $hostHeader, 2) + [1 => null];
+					} else {
+						$host = $hostHeader;
+					}
+				}
+				break;
 			}
 		}
 

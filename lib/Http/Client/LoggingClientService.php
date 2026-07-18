@@ -40,9 +40,13 @@ class LoggingClientService implements IClientService {
 			/** @var \GuzzleHttp\Client $guzzle */
 			$guzzle = $ref->getValue($client);
 
-			$handler = $guzzle->getConfig('handler');
-			if ($handler instanceof \GuzzleHttp\HandlerStack) {
-				$handler->unshift(
+			$stack = $guzzle->getConfig('handler');
+			if ($stack instanceof \GuzzleHttp\HandlerStack) {
+				// Idempotent: replace an already injected entry instead of
+				// stacking a second one (double decoration would silently
+				// duplicate every log entry).
+				$stack->remove('admin_audit_http_client');
+				$stack->unshift(
 					new HttpClientLoggerMiddleware(
 						$this->logger,
 						$this->resolveLogDir(),

@@ -129,8 +129,13 @@ class HttpClientLoggerMiddleware {
 
 						// Content-Length: 0 — no body
 						if (!$immediate) {
-							$compact = $this->compactHeaders($respHeaders);
-							$cl = $compact['content-length'] ?? $compact['Content-Length'] ?? null;
+							$cl = null;
+							foreach ($meta['responseHeaders'] as $k => $v) {
+								if (strtolower((string)$k) === 'content-length') {
+									$cl = is_array($v) ? ($v[0] ?? null) : $v;
+									break;
+								}
+							}
 							if ($cl !== null && is_numeric($cl) && (int)$cl === 0) {
 								$immediate = true;
 							}

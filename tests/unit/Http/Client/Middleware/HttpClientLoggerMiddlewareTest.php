@@ -125,6 +125,32 @@ class HttpClientLoggerMiddlewareTest extends TestCase {
 		$this->assertStringStartsWith('server-req-', (string)$seen);
 	}
 
+	public function testMixedCaseContentLengthZeroLogsImmediately(): void {
+		$dir = sys_get_temp_dir() . '/aahc-cl-' . bin2hex(random_bytes(4));
+		$mw = new HttpClientLoggerMiddleware(new NullLogger(), $dir);
+
+		$handler = $mw(function (Request $request, array $options) {
+			return new FulfilledPromise(new Response(200, ['Content-length' => '0'], ''));
+		});
+
+		try {
+			$response = $handler(new Request('GET', 'https://example.com/ping'), [])->wait();
+
+			$this->assertNotInstanceOf(CountingStream::class, $response->getBody());
+
+			$lines = file($dir . '/example.com.json', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+			$this->assertNotFalse($lines);
+			$entry = json_decode($lines[0], true, 512, JSON_THROW_ON_ERROR);
+			$this->assertSame(200, $entry['status']);
+			$this->assertNull($entry['compressionStats']['decompressed_bytes']);
+		} finally {
+			foreach (glob($dir . '/*') ?: [] as $file) {
+				@unlink($file);
+			}
+			@rmdir($dir);
+		}
+	}
+
 	public function testWriteImmediateOmitsDecompressedBytesAndRatio(): void {
 		$dir = sys_get_temp_dir() . '/aahc-wi-' . bin2hex(random_bytes(4));
 		$mw = new HttpClientLoggerMiddleware(new NullLogger(), $dir);
