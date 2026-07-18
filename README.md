@@ -100,46 +100,7 @@ The following headers are always redacted and cannot be un-redacted: `Authorizat
 
 ## Installation
 
-### From a release tarball
-
-Download the latest release tarball from the [releases page](https://github.com/ernolf/admin_audit_http_client/releases) and extract it into your Nextcloud `apps/` directory, so the app lives at `apps/admin_audit_http_client/`. Then set ownership to your web server user and enable it:
-
-```sh
-tar -xzf admin_audit_http_client-x.y.z.tar.gz -C /path/to/nextcloud/apps/
-chown -R www-data:www-data /path/to/nextcloud/apps/admin_audit_http_client
-occ app:enable admin_audit_http_client
-```
-
-### From source
-
-The build is driven by [ncmake](https://github.com/ernolf/ncmake) and runs entirely in throwaway containers, so the only requirement is **[podman](https://podman.io/)** (or Docker) — no PHP toolchain on the host. The first `make` fetches the shared ncmake Makefile once into `~/.cache/ncmake/`. Clone and build the tarball:
-
-```sh
-git clone https://github.com/ernolf/admin_audit_http_client.git
-cd admin_audit_http_client
-make build && make dist
-```
-
-This writes `build/artifacts/dist/admin_audit_http_client-x.y.z.tar.gz`. Install it exactly like a release tarball above.
-
-If your Nextcloud is on the same machine (or reachable over SSH), you can skip the tarball and deploy straight into its `apps/` directory — `OCC=1` runs the full refresh cycle (`app:disable`, sync, `chown`, `app:enable`) in one go:
-
-```sh
-make build && make rsync TARGET=/path/to/nextcloud/apps/ OCC=1
-```
-
-`TARGET` is the `apps/` parent directory and may be a local path or a remote `user@host:` path.
-
-For **Nextcloud All-in-One** (or any dockerized instance whose filesystem is not reachable from outside), `make cp` deploys into the running container instead:
-
-```sh
-make build && make cp TARGET=nextcloud-aio-nextcloud:/var/www/html/custom_apps/ OCC=1
-```
-
-### Update
-
-- Tarball installations: run `occ app:remove admin_audit_http_client`, then install the new tarball as above — this avoids leftover files from previous versions.
-- `make rsync`/`make cp` deployments: simply run the same command again after a `git pull`; the sync replaces the app directory as a whole.
+This app is not yet in the App Store. It is built with [ncmake](https://github.com/ernolf/ncmake). To build and install it from source — release tarball, `make rsync` or `make cp` — see the [installation guide](https://github.com/ernolf/ncmake/blob/main/doc/INSTALL.md).
 
 ## Roadmap
 
