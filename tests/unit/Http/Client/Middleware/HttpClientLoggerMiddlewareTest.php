@@ -171,7 +171,7 @@ class HttpClientLoggerMiddlewareTest extends TestCase {
 		];
 
 		try {
-			$this->invokePrivate($mw, 'writeImmediate', ['req-wi-1', $meta, [], ['size_download' => 10]]);
+			$this->invokePrivate($mw, 'writeImmediate', ['req-wi-1', $meta, ['size_download' => 10]]);
 
 			$lines = file($dir . '/example.com.json', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
 			$this->assertNotFalse($lines);

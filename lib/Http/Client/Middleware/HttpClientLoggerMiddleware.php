@@ -195,7 +195,7 @@ class HttpClientLoggerMiddleware {
 
 						if ($immediate) {
 							if ($this->shouldLog($intStatus)) {
-								$this->writeImmediate($reqId, $meta, $respHeaders, $handlerStats);
+								$this->writeImmediate($reqId, $meta, $handlerStats);
 							}
 							TransferStatsStore::clear($reqId);
 						} else {
@@ -250,12 +250,7 @@ class HttpClientLoggerMiddleware {
 						];
 						[$jsonFile, $plainFile] = LogPathHelper::getPathsFromMeta($metaForPaths, $this->logBaseDir, $reqId);
 
-						if (in_array($this->logFormat, ['json', 'both'], true)) {
-							@file_put_contents($jsonFile, json_encode($entry, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . PHP_EOL, FILE_APPEND | LOCK_EX);
-						}
-						if (in_array($this->logFormat, ['plain', 'both'], true)) {
-							@file_put_contents($plainFile, $plain, FILE_APPEND | LOCK_EX);
-						}
+						LogWriter::write($this->logFormat, $jsonFile, $entry, $plainFile, $plain, $this->logger);
 
 						TransferStatsStore::clear($reqId);
 					} catch (\Throwable $e) {
@@ -271,7 +266,7 @@ class HttpClientLoggerMiddleware {
 		};
 	}
 
-	private function writeImmediate(string $reqId, array $meta, array $respHeaders, ?array $handlerStats): void {
+	private function writeImmediate(string $reqId, array $meta, ?array $handlerStats): void {
 		try {
 			$compressed = null;
 			$encoding = 'none';
@@ -280,7 +275,7 @@ class HttpClientLoggerMiddleware {
 				$compressed = (int)round($handlerStats['size_download']);
 			}
 
-			$compact = $this->compactHeaders($respHeaders);
+			$compact = $meta['responseHeaders'];
 
 			foreach ($compact as $k => $v) {
 				$lk = strtolower($k);
@@ -358,12 +353,7 @@ class HttpClientLoggerMiddleware {
 
 			[$jsonFile, $plainFile] = LogPathHelper::getPathsFromMeta($meta, $this->logBaseDir, $reqId);
 
-			if (in_array($this->logFormat, ['json', 'both'], true)) {
-				@file_put_contents($jsonFile, json_encode($merged, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . PHP_EOL, FILE_APPEND | LOCK_EX);
-			}
-			if (in_array($this->logFormat, ['plain', 'both'], true)) {
-				@file_put_contents($plainFile, $plain, FILE_APPEND | LOCK_EX);
-			}
+			LogWriter::write($this->logFormat, $jsonFile, $merged, $plainFile, $plain, $this->logger);
 		} catch (\Throwable $e) {
 			$this->logger->debug('HttpClientLoggerMiddleware: writeImmediate failed: ' . $e->getMessage());
 		}

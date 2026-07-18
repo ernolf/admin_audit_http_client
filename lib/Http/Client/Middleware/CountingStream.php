@@ -195,12 +195,7 @@ class CountingStream implements StreamInterface {
 
 			[$jsonFile, $plainFile] = LogPathHelper::getPathsFromMeta($this->meta, $this->logBaseDir, $this->reqId);
 
-			if (in_array($this->logFormat, ['json', 'both'], true)) {
-				@file_put_contents($jsonFile, json_encode($merged, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . PHP_EOL, FILE_APPEND | LOCK_EX);
-			}
-			if (in_array($this->logFormat, ['plain', 'both'], true)) {
-				@file_put_contents($plainFile, $plain, FILE_APPEND | LOCK_EX);
-			}
+			LogWriter::write($this->logFormat, $jsonFile, $merged, $plainFile, $plain, $this->logger);
 
 			TransferStatsStore::clear($this->reqId);
 		} catch (\Throwable $e) {
