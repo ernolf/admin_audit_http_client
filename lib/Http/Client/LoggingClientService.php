@@ -54,6 +54,8 @@ class LoggingClientService implements IClientService {
 						$this->config->getSystemValueString('audit_http_client_format', 'both'),
 						(array)$this->config->getSystemValue('audit_http_client_exclude_domains', []),
 						(array)$this->config->getSystemValue('audit_http_client_redact_headers', []),
+						(array)$this->config->getSystemValue('audit_http_client_redact_params', []),
+						(array)$this->config->getSystemValue('audit_http_client_redact_path_patterns', []),
 						$this->request->getId(),
 					),
 					'admin_audit_http_client'

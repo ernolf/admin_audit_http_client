@@ -25,6 +25,8 @@ class HttpClientLoggerMiddlewareTest extends TestCase {
 		int $logLevel = 0,
 		array $excludeDomains = [],
 		array $redactHeaders = [],
+		array $redactParams = [],
+		array $redactPathPatterns = [],
 		string $serverReqId = '',
 	): HttpClientLoggerMiddleware {
 		return new HttpClientLoggerMiddleware(
@@ -34,6 +36,8 @@ class HttpClientLoggerMiddlewareTest extends TestCase {
 			'both',
 			$excludeDomains,
 			$redactHeaders,
+			$redactParams,
+			$redactPathPatterns,
 			$serverReqId,
 		);
 	}
@@ -113,7 +117,7 @@ class HttpClientLoggerMiddlewareTest extends TestCase {
 	}
 
 	public function testGeneratedRequestIdCarriesServerRequestIdPrefix(): void {
-		$mw = $this->middleware(2, [], [], 'server-req');
+		$mw = $this->middleware(2, [], [], [], [], 'server-req');
 		$seen = null;
 
 		$handler = $mw(function (Request $request, array $options) use (&$seen) {
@@ -259,6 +263,91 @@ class HttpClientLoggerMiddlewareTest extends TestCase {
 				'Accept' => ['text/html'],
 			]]),
 		);
+	}
+
+	public function testRedactUriRedactsDefaultParamsCaseInsensitively(): void {
+		$mw = $this->middleware();
+		$this->assertSame(
+			'https://api.example.com/v1/data?access_token=[redacted]&page=2',
+			$this->invokePrivate($mw, 'redactUri', ['https://api.example.com/v1/data?access_token=geheim&page=2']),
+		);
+		$this->assertSame(
+			'https://api.example.com/v1/data?Access_Token=[redacted]',
+			$this->invokePrivate($mw, 'redactUri', ['https://api.example.com/v1/data?Access_Token=geheim']),
+		);
+	}
+
+	public function testRedactUriRedactsConfiguredExtraParams(): void {
+		$mw = $this->middleware(0, [], [], ['session_key']);
+		$this->assertSame(
+			'https://x.test/p?session_key=[redacted]&token=[redacted]',
+			$this->invokePrivate($mw, 'redactUri', ['https://x.test/p?session_key=abc&token=xyz']),
+		);
+	}
+
+	public function testRedactUriLeavesValuelessParamsAndFragment(): void {
+		$mw = $this->middleware();
+		$this->assertSame(
+			'https://x.test/p?token&flag=1#frag',
+			$this->invokePrivate($mw, 'redactUri', ['https://x.test/p?token&flag=1#frag']),
+		);
+	}
+
+	public function testRedactUriRedactsPrivatePathSegments(): void {
+		$mw = $this->middleware();
+		$this->assertSame(
+			'https://calendar.google.com/calendar/ical/user%40googlemail.com/[redacted]/basic.ics',
+			$this->invokePrivate($mw, 'redactUri', [
+				'https://calendar.google.com/calendar/ical/user%40googlemail.com/private-0123456789abcdef0123456789abcdef/basic.ics',
+			]),
+		);
+	}
+
+	public function testRedactUriAppliesConfiguredPathPatterns(): void {
+		$mw = $this->middleware(0, [], [], [], ['#(?<=/)key-[0-9a-f]+#']);
+		$this->assertSame(
+			'https://x.test/feed/[redacted]/data.xml',
+			$this->invokePrivate($mw, 'redactUri', ['https://x.test/feed/key-abc123/data.xml']),
+		);
+	}
+
+	public function testRedactUriSkipsInvalidPathPatterns(): void {
+		$mw = $this->middleware(0, [], [], [], ['#[unclosed']);
+		$this->assertSame(
+			'https://x.test/feed/data.xml',
+			$this->invokePrivate($mw, 'redactUri', ['https://x.test/feed/data.xml']),
+		);
+	}
+
+	public function testRedactUriWithoutQueryIsUnchanged(): void {
+		$mw = $this->middleware();
+		$this->assertSame(
+			'https://x.test/plain/path',
+			$this->invokePrivate($mw, 'redactUri', ['https://x.test/plain/path']),
+		);
+	}
+
+	public function testLoggedUriIsRedacted(): void {
+		$dir = sys_get_temp_dir() . '/aahc-uri-' . bin2hex(random_bytes(4));
+		$mw = new HttpClientLoggerMiddleware(new NullLogger(), $dir);
+
+		$handler = $mw(function (Request $request, array $options) {
+			return new FulfilledPromise(new Response(204));
+		});
+
+		try {
+			$handler(new Request('GET', 'https://example.com/hook?token=geheim&id=7'), [])->wait();
+
+			$lines = file($dir . '/example.com.json', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+			$this->assertNotFalse($lines);
+			$entry = json_decode($lines[0], true, 512, JSON_THROW_ON_ERROR);
+			$this->assertSame('https://example.com/hook?token=[redacted]&id=7', $entry['uri']);
+		} finally {
+			foreach (glob($dir . '/*') ?: [] as $file) {
+				@unlink($file);
+			}
+			@rmdir($dir);
+		}
 	}
 
 	public function testCompactHeadersCastsNumericLengths(): void {
