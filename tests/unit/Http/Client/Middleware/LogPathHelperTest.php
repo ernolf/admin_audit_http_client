@@ -55,6 +55,14 @@ class LogPathHelperTest extends TestCase {
 		$this->assertSame($this->baseDir . '/foo.bar_8080.json', $json);
 	}
 
+	public function testHostHeaderFallbackIsCaseInsensitive(): void {
+		[$json] = LogPathHelper::getPathsFromMeta(
+			['requestHeaders' => ['host' => 'foo.bar:8080']],
+			$this->baseDir,
+		);
+		$this->assertSame($this->baseDir . '/foo.bar_8080.json', $json);
+	}
+
 	public function testHostHeaderFallbackAcceptsArrayValues(): void {
 		[$json] = LogPathHelper::getPathsFromMeta(
 			['requestHeaders' => ['Host' => ['foo.bar']]],

@@ -44,7 +44,9 @@ class MiddlewareInjectionTest extends TestCase {
 
 		$stackRef = new \ReflectionProperty(HandlerStack::class, 'stack');
 		$names = array_column($stackRef->getValue($handler), 1);
-		$this->assertContains('admin_audit_http_client', $names);
+		// This service decorates the already decorated container service, so
+		// without the idempotency guard the entry would appear twice here.
+		$this->assertCount(1, array_keys($names, 'admin_audit_http_client', true));
 	}
 
 	public function testEnabledAppDecoratesClientService(): void {
