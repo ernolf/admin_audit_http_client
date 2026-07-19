@@ -28,7 +28,12 @@ final class LogWriter {
 		LoggerInterface $logger,
 	): void {
 		if (in_array($format, ['json', 'both'], true)) {
-			self::append($jsonFile, json_encode($entry, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . PHP_EOL, $logger);
+			// Remote servers can send headers with broken UTF-8; substitute
+			// those bytes instead of losing the whole entry.
+			$json = json_encode($entry, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
+			if ($json !== false) {
+				self::append($jsonFile, $json . PHP_EOL, $logger);
+			}
 		}
 		if (in_array($format, ['plain', 'both'], true)) {
 			self::append($plainFile, $plainLine, $logger);
