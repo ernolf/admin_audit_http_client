@@ -1,0 +1,37 @@
+{
+  "block-unconventional-commits.yml": {
+    "hash": "0265b1456e429e5219b48c4c8aaea726ac60fa24db0d3f3ef68e2c9f04fcbea9",
+    "sha": "bcc722a61824682a2a1538b9e1450e98616d1889",
+    "source": "nextcloud"
+  },
+  "lint-info-xml.yml": {
+    "hash": "072fff135b8965517449e86ebf3853d635f1d997cf430f60d30210f728293ef4",
+    "sha": "e55705222f421f6066ec4df853aab507b955b091",
+    "source": "nextcloud"
+  },
+  "lint-php-cs.yml": {
+    "hash": "d8e98ce4e02e20971edac20b3027daed61451bd75588bdf3a57695be00aacbcb",
+    "sha": "0a65977bef92cbd684f8ee5dde415ad7f95ee4f4",
+    "source": "nextcloud"
+  },
+  "lint-php.yml": {
+    "hash": "c35e63c27843f2012a097bb4b2a7ef622130509e68cde724c53c6b5eb2886863",
+    "sha": "cb2684b245c23c086af88e6bc6fc30a5df038c6e",
+    "source": "nextcloud"
+  },
+  "psalm.yml": {
+    "hash": "3cc569bb779c95a6c612aa5f0946c5df373fddfcd9899b514c7d269bffd3e9cb",
+    "sha": "4feadcb8fad77932706c100663577dca7c0b44d8",
+    "source": "nextcloud"
+  },
+  "release.yml": {
+    "hash": "cdb4486ee5732e4a5d834c7e57eac808eb0d1e4ce22af7a00cea3ca260355056",
+    "sha": "0cd0c3e40145e41d6043d72bc07920a5ebb4acb8",
+    "source": "ncmake"
+  },
+  "reuse.yml": {
+    "hash": "3593df9baabc3dd1fc3539143fafa78706de81cf575cd2e6e7f7207ee6fb390f",
+    "sha": "4e1a74194ecf76f593564a7c0b35bdb19bd23a58",
+    "source": "nextcloud"
+  }
+}
