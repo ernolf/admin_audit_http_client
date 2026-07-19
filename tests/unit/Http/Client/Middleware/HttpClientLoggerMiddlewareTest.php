@@ -236,12 +236,12 @@ class HttpClientLoggerMiddlewareTest extends TestCase {
 		$mw = $this->middleware();
 		$this->assertSame(
 			[
-				'Authorization' => '[redacted]',
-				'Proxy-Authorization' => '[redacted]',
-				'Cookie' => '[redacted]',
-				'SET-COOKIE' => '[redacted]',
-				'x-api-key' => '[redacted]',
-				'X-Auth-Token' => '[redacted]',
+				'Authorization' => '***REMOVED SENSITIVE VALUE***',
+				'Proxy-Authorization' => '***REMOVED SENSITIVE VALUE***',
+				'Cookie' => '***REMOVED SENSITIVE VALUE***',
+				'SET-COOKIE' => '***REMOVED SENSITIVE VALUE***',
+				'x-api-key' => '***REMOVED SENSITIVE VALUE***',
+				'X-Auth-Token' => '***REMOVED SENSITIVE VALUE***',
 				'Accept' => 'text/html',
 			],
 			$this->invokePrivate($mw, 'compactHeaders', [[
@@ -260,9 +260,9 @@ class HttpClientLoggerMiddlewareTest extends TestCase {
 		$mw = $this->middleware(0, [], ['X-Secret', '  x-internal  ']);
 		$this->assertSame(
 			[
-				'X-Secret' => '[redacted]',
-				'X-Internal' => '[redacted]',
-				'Authorization' => '[redacted]',
+				'X-Secret' => '***REMOVED SENSITIVE VALUE***',
+				'X-Internal' => '***REMOVED SENSITIVE VALUE***',
+				'Authorization' => '***REMOVED SENSITIVE VALUE***',
 				'Accept' => 'text/html',
 			],
 			$this->invokePrivate($mw, 'compactHeaders', [[
@@ -277,11 +277,11 @@ class HttpClientLoggerMiddlewareTest extends TestCase {
 	public function testRedactUriRedactsDefaultParamsCaseInsensitively(): void {
 		$mw = $this->middleware();
 		$this->assertSame(
-			'https://api.example.com/v1/data?access_token=[redacted]&page=2',
+			'https://api.example.com/v1/data?access_token=***REMOVED SENSITIVE VALUE***&page=2',
 			$this->invokePrivate($mw, 'redactUri', ['https://api.example.com/v1/data?access_token=geheim&page=2']),
 		);
 		$this->assertSame(
-			'https://api.example.com/v1/data?Access_Token=[redacted]',
+			'https://api.example.com/v1/data?Access_Token=***REMOVED SENSITIVE VALUE***',
 			$this->invokePrivate($mw, 'redactUri', ['https://api.example.com/v1/data?Access_Token=geheim']),
 		);
 	}
@@ -289,7 +289,7 @@ class HttpClientLoggerMiddlewareTest extends TestCase {
 	public function testRedactUriRedactsConfiguredExtraParams(): void {
 		$mw = $this->middleware(0, [], [], ['session_key']);
 		$this->assertSame(
-			'https://x.test/p?session_key=[redacted]&token=[redacted]',
+			'https://x.test/p?session_key=***REMOVED SENSITIVE VALUE***&token=***REMOVED SENSITIVE VALUE***',
 			$this->invokePrivate($mw, 'redactUri', ['https://x.test/p?session_key=abc&token=xyz']),
 		);
 	}
@@ -305,7 +305,7 @@ class HttpClientLoggerMiddlewareTest extends TestCase {
 	public function testRedactUriRedactsPrivatePathSegments(): void {
 		$mw = $this->middleware();
 		$this->assertSame(
-			'https://calendar.google.com/calendar/ical/user%40googlemail.com/[redacted]/basic.ics',
+			'https://calendar.google.com/calendar/ical/user%40googlemail.com/private-***REMOVED SENSITIVE VALUE***/basic.ics',
 			$this->invokePrivate($mw, 'redactUri', [
 				'https://calendar.google.com/calendar/ical/user%40googlemail.com/private-0123456789abcdef0123456789abcdef/basic.ics',
 			]),
@@ -315,7 +315,7 @@ class HttpClientLoggerMiddlewareTest extends TestCase {
 	public function testRedactUriAppliesConfiguredPathPatterns(): void {
 		$mw = $this->middleware(0, [], [], [], ['#(?<=/)key-[0-9a-f]+#']);
 		$this->assertSame(
-			'https://x.test/feed/[redacted]/data.xml',
+			'https://x.test/feed/***REMOVED SENSITIVE VALUE***/data.xml',
 			$this->invokePrivate($mw, 'redactUri', ['https://x.test/feed/key-abc123/data.xml']),
 		);
 	}
@@ -350,7 +350,7 @@ class HttpClientLoggerMiddlewareTest extends TestCase {
 			$lines = file($dir . '/example.com.json', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
 			$this->assertNotFalse($lines);
 			$entry = json_decode($lines[0], true, 512, JSON_THROW_ON_ERROR);
-			$this->assertSame('https://example.com/hook?token=[redacted]&id=7', $entry['uri']);
+			$this->assertSame('https://example.com/hook?token=***REMOVED SENSITIVE VALUE***&id=7', $entry['uri']);
 		} finally {
 			foreach (glob($dir . '/*') ?: [] as $file) {
 				@unlink($file);

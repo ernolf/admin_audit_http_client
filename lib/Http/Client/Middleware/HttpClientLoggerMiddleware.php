@@ -11,14 +11,21 @@ namespace OCA\AdminAuditHttpClient\Http\Client\Middleware;
 
 use GuzzleHttp\RequestOptions;
 use GuzzleHttp\TransferStats;
+use OCP\IConfig;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Log\LoggerInterface;
 
 class HttpClientLoggerMiddleware {
 	/**
-	 * Header values that would leak credentials to disk; always logged as
-	 * [redacted], with no opt-out.
+	 * Same placeholder the server itself uses when it strips sensitive
+	 * values from config output.
+	 */
+	private const REDACTED = IConfig::SENSITIVE_VALUE;
+
+	/**
+	 * Header values that would leak credentials to disk; always replaced by
+	 * IConfig::SENSITIVE_VALUE, with no opt-out.
 	 */
 	private const DEFAULT_REDACT_HEADERS = [
 		'authorization',
@@ -31,7 +38,7 @@ class HttpClientLoggerMiddleware {
 
 	/**
 	 * Query parameter values that would leak credentials to disk when the URI
-	 * is logged; always logged as [redacted], with no opt-out.
+	 * is logged; always replaced by IConfig::SENSITIVE_VALUE, with no opt-out.
 	 */
 	private const DEFAULT_REDACT_PARAMS = [
 		'access_token',
@@ -49,12 +56,13 @@ class HttpClientLoggerMiddleware {
 	];
 
 	/**
-	 * PCRE patterns whose matches in the URI path are logged as [redacted].
+	 * PCRE patterns whose matches in the URI path are replaced by
+	 * IConfig::SENSITIVE_VALUE.
 	 * Google marks its secret iCal URLs with a "private-<hash>" path segment;
 	 * anyone holding such a URL can read the calendar.
 	 */
 	private const DEFAULT_REDACT_PATH_PATTERNS = [
-		'#(?<=/)private-[^/]+#',
+		'#(?<=/private-)[^/]+#',
 	];
 
 	private LoggerInterface $logger;
@@ -390,7 +398,7 @@ class HttpClientLoggerMiddleware {
 
 	/**
 	 * Redacts credentials from a URI before it is logged: values of
-	 * credential-bearing query parameters become [redacted] (names keep their
+	 * credential-bearing query parameters become IConfig::SENSITIVE_VALUE (names keep their
 	 * original spelling, matching is case-insensitive, parameters without a
 	 * value and the fragment are left untouched), and path portions matching
 	 * the configured patterns are replaced likewise. Invalid patterns are
@@ -401,7 +409,7 @@ class HttpClientLoggerMiddleware {
 		$base = $qPos === false ? $uri : substr($uri, 0, $qPos);
 
 		foreach ($this->redactPathPatterns as $pattern) {
-			$replaced = @preg_replace($pattern, '[redacted]', $base);
+			$replaced = @preg_replace($pattern, self::REDACTED, $base);
 			if (is_string($replaced)) {
 				$base = $replaced;
 			}
@@ -428,7 +436,7 @@ class HttpClientLoggerMiddleware {
 			}
 			$name = substr($pair, 0, $eq);
 			if (in_array(strtolower(rawurldecode($name)), $this->redactParams, true)) {
-				$pairs[$i] = $name . '=[redacted]';
+				$pairs[$i] = $name . '=' . self::REDACTED;
 			}
 		}
 
@@ -452,7 +460,7 @@ class HttpClientLoggerMiddleware {
 			$lk = strtolower($k);
 
 			if (in_array($lk, $this->redactHeaders, true)) {
-				$out[$k] = '[redacted]';
+				$out[$k] = self::REDACTED;
 				continue;
 			}
 
