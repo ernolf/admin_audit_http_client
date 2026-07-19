@@ -270,7 +270,9 @@ final class HttpClientLoggerMiddleware {
 					if ($reason instanceof \Throwable) {
 						throw $reason;
 					}
-					throw new \RuntimeException('HTTP request rejected: ' . (string)$reason);
+					throw new \RuntimeException(
+						'HTTP request rejected: ' . (is_object($reason) ? get_class($reason) : (string)$reason)
+					);
 				}
 			);
 		};
