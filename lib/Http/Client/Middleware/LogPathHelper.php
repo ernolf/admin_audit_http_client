@@ -9,7 +9,7 @@ declare(strict_types=1);
 
 namespace OCA\AdminAuditHttpClient\Http\Client\Middleware;
 
-class LogPathHelper {
+final class LogPathHelper {
 	/**
 	 * Derives per-host log file paths from request meta info.
 	 *

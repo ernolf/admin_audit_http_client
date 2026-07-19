@@ -17,7 +17,7 @@ use Psr\Log\LoggerInterface;
  * entry once the body has been fully consumed (close) or garbage collected
  * (__destruct fallback for streams that are never explicitly closed).
  */
-class CountingStream implements StreamInterface {
+final class CountingStream implements StreamInterface {
 	private int $bytesRead = 0;
 	private bool $logged = false;
 

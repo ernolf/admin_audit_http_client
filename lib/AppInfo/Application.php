@@ -19,7 +19,7 @@ use OCP\IConfig;
 use OCP\IRequest;
 use Psr\Log\LoggerInterface;
 
-class Application extends App implements IBootstrap {
+final class Application extends App implements IBootstrap {
 	public function __construct() {
 		parent::__construct('admin_audit_http_client');
 	}

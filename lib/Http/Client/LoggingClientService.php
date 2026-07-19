@@ -16,7 +16,7 @@ use OCP\IConfig;
 use OCP\IRequest;
 use Psr\Log\LoggerInterface;
 
-class LoggingClientService implements IClientService {
+final class LoggingClientService implements IClientService {
 	public function __construct(
 		private IClientService $inner,
 		private LoggerInterface $logger,

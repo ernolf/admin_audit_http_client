@@ -15,7 +15,7 @@ namespace OCA\AdminAuditHttpClient\Http\Client\Middleware;
  * a static array is sufficient; entries are removed as soon as the request's
  * log entry has been written or logging is skipped.
  */
-class TransferStatsStore {
+final class TransferStatsStore {
 	/** @var array<string, array> */
 	private static array $stats = [];
 
