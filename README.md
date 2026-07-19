@@ -102,7 +102,7 @@ The following headers are always redacted and cannot be un-redacted: `Authorizat
 
 Additional query parameter names whose values are logged as `***REMOVED SENSITIVE VALUE***` in the `uri` field. Matching is case-insensitive; the parameter name and the rest of the URI stay unchanged. Default: `[]`.
 
-The following parameters are always redacted and cannot be un-redacted: `access_token`, `api_key`, `apikey`, `auth`, `client_secret`, `password`, `secret`, `signature`, `token`, `X-Amz-Credential`, `X-Amz-Security-Token`, `X-Amz-Signature`.
+The following parameters are always redacted and cannot be un-redacted: `access_token`, `api_key`, `apikey`, `auth`, `client_secret`, `key`, `password`, `secret`, `signature`, `token`, `X-Amz-Credential`, `X-Amz-Security-Token`, `X-Amz-Signature`.
 
 ```php
 'audit_http_client_redact_params' => [
@@ -118,7 +118,7 @@ The following pattern is always applied and cannot be removed: `#(?<=/private-)[
 
 ```php
 'audit_http_client_redact_path_patterns' => [
-    '#(?<=/)key-[0-9a-f]+#',
+    '#(?<=/)sess-[0-9a-f]+#',
 ],
 ```
 

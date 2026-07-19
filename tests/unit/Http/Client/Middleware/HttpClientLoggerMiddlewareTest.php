@@ -284,6 +284,10 @@ class HttpClientLoggerMiddlewareTest extends TestCase {
 			'https://api.example.com/v1/data?Access_Token=***REMOVED SENSITIVE VALUE***',
 			$this->invokePrivate($mw, 'redactUri', ['https://api.example.com/v1/data?Access_Token=geheim']),
 		);
+		$this->assertSame(
+			'https://maps.googleapis.com/maps/api/geocode/json?address=Berlin&key=***REMOVED SENSITIVE VALUE***',
+			$this->invokePrivate($mw, 'redactUri', ['https://maps.googleapis.com/maps/api/geocode/json?address=Berlin&key=AIzaSyExample']),
+		);
 	}
 
 	public function testRedactUriRedactsConfiguredExtraParams(): void {
@@ -313,10 +317,10 @@ class HttpClientLoggerMiddlewareTest extends TestCase {
 	}
 
 	public function testRedactUriAppliesConfiguredPathPatterns(): void {
-		$mw = $this->middleware(0, [], [], [], ['#(?<=/)key-[0-9a-f]+#']);
+		$mw = $this->middleware(0, [], [], [], ['#(?<=/)sess-[0-9a-f]+#']);
 		$this->assertSame(
 			'https://x.test/feed/***REMOVED SENSITIVE VALUE***/data.xml',
-			$this->invokePrivate($mw, 'redactUri', ['https://x.test/feed/key-abc123/data.xml']),
+			$this->invokePrivate($mw, 'redactUri', ['https://x.test/feed/sess-abc123/data.xml']),
 		);
 	}
 
