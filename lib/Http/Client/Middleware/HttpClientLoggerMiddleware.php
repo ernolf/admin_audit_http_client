@@ -148,7 +148,7 @@ final class HttpClientLoggerMiddleware {
 			// Attach on_stats callback to capture cURL transfer stats
 			if (!isset($options[RequestOptions::ON_STATS])) {
 				$options[RequestOptions::ON_STATS] = function (TransferStats $stats) use ($reqId): void {
-					TransferStatsStore::set($reqId, $stats->getHandlerStats());
+					TransferStatsStore::set($reqId, $this->redactHandlerStats($stats->getHandlerStats()));
 				};
 			}
 
@@ -443,6 +443,21 @@ final class HttpClientLoggerMiddleware {
 		}
 
 		return $base . '?' . implode('&', $pairs) . $fragment;
+	}
+
+	/**
+	 * curl's transfer stats repeat the request URI: "url" holds the effective
+	 * URI after redirects, "redirect_url" a pending redirect target. Logged
+	 * verbatim they would bypass redactUri(), so both are redacted before the
+	 * stats reach the store.
+	 */
+	private function redactHandlerStats(array $handlerStats): array {
+		foreach (['url', 'redirect_url'] as $key) {
+			if (isset($handlerStats[$key]) && is_string($handlerStats[$key]) && $handlerStats[$key] !== '') {
+				$handlerStats[$key] = $this->redactUri($handlerStats[$key]);
+			}
+		}
+		return $handlerStats;
 	}
 
 	private function normalizeHeaders(array $hdrs): array {
