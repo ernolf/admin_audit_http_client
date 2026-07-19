@@ -16,7 +16,7 @@ use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Log\LoggerInterface;
 
-class HttpClientLoggerMiddleware {
+final class HttpClientLoggerMiddleware {
 	/**
 	 * Same placeholder the server itself uses when it strips sensitive
 	 * values from config output.

@@ -16,7 +16,7 @@ use Psr\Log\LoggerInterface;
  * reports the first failed write per process as a warning — without that, a
  * full or unwritable log directory would go entirely unnoticed.
  */
-class LogWriter {
+final class LogWriter {
 	private static bool $failureLogged = false;
 
 	public static function write(
