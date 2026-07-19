@@ -336,6 +336,65 @@ class HttpClientLoggerMiddlewareTest extends TestCase {
 		);
 	}
 
+	public function testRedactHandlerStatsRedactsUrlAndRedirectUrl(): void {
+		$mw = $this->middleware();
+		$this->assertSame(
+			[
+				'url' => 'https://calendar.google.com/calendar/ical/user%40googlemail.com/private-***REMOVED SENSITIVE VALUE***/basic.ics',
+				'redirect_url' => 'https://x.test/cb?token=***REMOVED SENSITIVE VALUE***',
+				'http_code' => 200,
+			],
+			$this->invokePrivate($mw, 'redactHandlerStats', [[
+				'url' => 'https://calendar.google.com/calendar/ical/user%40googlemail.com/private-0123456789abcdef0123456789abcdef/basic.ics',
+				'redirect_url' => 'https://x.test/cb?token=geheim',
+				'http_code' => 200,
+			]]),
+		);
+	}
+
+	public function testRedactHandlerStatsLeavesEmptyRedirectUrl(): void {
+		$mw = $this->middleware();
+		$this->assertSame(
+			['url' => 'https://x.test/plain', 'redirect_url' => ''],
+			$this->invokePrivate($mw, 'redactHandlerStats', [
+				['url' => 'https://x.test/plain', 'redirect_url' => ''],
+			]),
+		);
+	}
+
+	public function testLoggedHandlerStatsUrlIsRedacted(): void {
+		$dir = sys_get_temp_dir() . '/aahc-hs-' . bin2hex(random_bytes(4));
+		$mw = new HttpClientLoggerMiddleware(new NullLogger(), $dir);
+
+		$handler = $mw(function (Request $request, array $options) {
+			$response = new Response(204);
+			$options[RequestOptions::ON_STATS](
+				new TransferStats($request, $response, 0.1, null, [
+					'url' => (string)$request->getUri(),
+					'http_code' => 204,
+				]),
+			);
+			return new FulfilledPromise($response);
+		});
+
+		try {
+			$handler(new Request('GET', 'https://example.com/hook?token=geheim'), [])->wait();
+
+			$lines = file($dir . '/example.com.json', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+			$this->assertNotFalse($lines);
+			$entry = json_decode($lines[0], true, 512, JSON_THROW_ON_ERROR);
+			$this->assertSame(
+				'https://example.com/hook?token=***REMOVED SENSITIVE VALUE***',
+				$entry['handlerStats']['url'],
+			);
+		} finally {
+			foreach (glob($dir . '/*') ?: [] as $file) {
+				@unlink($file);
+			}
+			@rmdir($dir);
+		}
+	}
+
 	public function testLoggedUriIsRedacted(): void {
 		$dir = sys_get_temp_dir() . '/aahc-uri-' . bin2hex(random_bytes(4));
 		$mw = new HttpClientLoggerMiddleware(new NullLogger(), $dir);

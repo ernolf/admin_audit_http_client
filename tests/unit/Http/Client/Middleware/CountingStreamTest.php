@@ -98,6 +98,40 @@ class CountingStreamTest extends TestCase {
 		$this->assertStringContainsString('[stream-incomplete]', $plain);
 	}
 
+	public function testDestructAfterFullReadReportsStreamConsumed(): void {
+		$reqId = uniqid('req', true);
+		$stream = $this->stream('hello world', $reqId);
+
+		$this->assertSame('hello world', $stream->getContents());
+		unset($stream);
+
+		$entries = $this->readJsonLines();
+		$this->assertCount(1, $entries);
+		$this->assertTrue($entries[0]['stream_consumed']);
+
+		$plain = file_get_contents($this->baseDir . '/example.com.log');
+		$this->assertNotFalse($plain);
+		$this->assertStringNotContainsString('[stream-incomplete]', $plain);
+	}
+
+	public function testDetachReportsConsumptionAsUnknown(): void {
+		$reqId = uniqid('req', true);
+		$stream = $this->stream('hello world', $reqId);
+
+		$resource = $stream->detach();
+		$this->assertIsResource($resource);
+
+		$entries = $this->readJsonLines();
+		$this->assertCount(1, $entries);
+		$this->assertNull($entries[0]['compressionStats']['decompressed_bytes']);
+		$this->assertNull($entries[0]['compressionStats']['ratio']);
+		$this->assertNull($entries[0]['stream_consumed']);
+
+		$plain = file_get_contents($this->baseDir . '/example.com.log');
+		$this->assertNotFalse($plain);
+		$this->assertStringContainsString('[stream-detached]', $plain);
+	}
+
 	public function testToStringAfterPartialReadCountsBodyOnce(): void {
 		$reqId = uniqid('req', true);
 		$stream = $this->stream('hello world', $reqId);

@@ -14,12 +14,14 @@ use Psr\Log\LoggerInterface;
 
 /**
  * Wraps a response body stream to count decompressed bytes and write the log
- * entry once the body has been fully consumed (close) or garbage collected
- * (__destruct fallback for streams that are never explicitly closed).
+ * entry once the stream is closed, detached or garbage collected. Consumption
+ * is derived from the read position; a detached body is consumed outside this
+ * wrapper, so its byte count and consumption state are reported as unknown.
  */
 final class CountingStream implements StreamInterface {
 	private int $bytesRead = 0;
 	private bool $logged = false;
+	private bool $detached = false;
 
 	public function __construct(
 		private StreamInterface $inner,
@@ -33,20 +35,21 @@ final class CountingStream implements StreamInterface {
 
 	public function __destruct() {
 		if (!$this->logged) {
-			$this->writeLog(false);
+			$this->writeLog();
 		}
 	}
 
 	public function close(): void {
 		if (!$this->logged) {
-			$this->writeLog(true);
+			$this->writeLog();
 		}
 		$this->inner->close();
 	}
 
 	public function detach(): mixed {
+		$this->detached = true;
 		if (!$this->logged) {
-			$this->writeLog(false);
+			$this->writeLog();
 		}
 		return $this->inner->detach();
 	}
@@ -121,9 +124,22 @@ final class CountingStream implements StreamInterface {
 		return $this->inner->getMetadata($key);
 	}
 
-	private function writeLog(bool $complete): void {
+	private function writeLog(): void {
 		$this->logged = true;
 		try {
+			// Callers almost never close() the stream themselves, so
+			// consumption is derived from the read position instead of the
+			// close/destruct distinction. A detached body is handed to the
+			// caller as a raw resource and read outside this wrapper.
+			$consumed = false;
+			if (!$this->detached) {
+				try {
+					$consumed = $this->inner->eof();
+				} catch (\Throwable) {
+					// Stream already closed or invalid; treat as not consumed.
+				}
+			}
+
 			$handlerStats = TransferStatsStore::get($this->reqId);
 
 			$compressed = null;
@@ -142,8 +158,8 @@ final class CountingStream implements StreamInterface {
 				}
 			}
 
-			$decompressed = $this->bytesRead;
-			if ($compressed !== null && $decompressed > 0) {
+			$decompressed = $this->detached ? null : $this->bytesRead;
+			if ($compressed !== null && $decompressed !== null && $decompressed > 0) {
 				$ratio = round($compressed / $decompressed, 2);
 			}
 
@@ -180,10 +196,15 @@ final class CountingStream implements StreamInterface {
 					'decompressed_bytes' => $decompressed,
 					'ratio' => $ratio,
 				],
-				'stream_consumed' => $complete,
+				'stream_consumed' => $this->detached ? null : $consumed,
 			];
 
-			$incomplete = $complete ? '' : ' [stream-incomplete]';
+			$suffix = '';
+			if ($this->detached) {
+				$suffix = ' [stream-detached]';
+			} elseif (!$consumed) {
+				$suffix = ' [stream-incomplete]';
+			}
 			$plain = sprintf(
 				"%s %s %s %s %s %s compressed=%s decompressed=%s ratio=%s encoding=%s Hdrs=%s \"%s\"%s\n",
 				$this->reqId,
@@ -193,12 +214,12 @@ final class CountingStream implements StreamInterface {
 				$this->meta['http'] ?? '-',
 				$this->meta['status'] ?? '-',
 				$compressed ?? '-',
-				$decompressed,
+				$decompressed ?? '-',
 				$ratio ?? '-',
 				$encoding,
 				$headerNames,
 				$userAgent,
-				$incomplete
+				$suffix
 			);
 
 			[$jsonFile, $plainFile] = LogPathHelper::getPathsFromMeta($this->meta, $this->logBaseDir, $this->reqId);
