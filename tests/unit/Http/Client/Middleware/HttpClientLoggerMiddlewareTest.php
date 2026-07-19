@@ -63,6 +63,15 @@ class HttpClientLoggerMiddlewareTest extends TestCase {
 		$this->assertTrue($this->invokePrivate($mw, 'shouldLog', [500]));
 	}
 
+	public function testShouldLogClampsOutOfRangeLevels(): void {
+		$tooHigh = $this->middleware(3);
+		$this->assertFalse($this->invokePrivate($tooHigh, 'shouldLog', [404]));
+		$this->assertTrue($this->invokePrivate($tooHigh, 'shouldLog', [500]));
+
+		$tooLow = $this->middleware(-1);
+		$this->assertTrue($this->invokePrivate($tooLow, 'shouldLog', [200]));
+	}
+
 	public function testShouldLogLevelTwoLogsServerErrorsOnly(): void {
 		$mw = $this->middleware(2);
 		$this->assertFalse($this->invokePrivate($mw, 'shouldLog', [200]));

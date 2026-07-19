@@ -98,6 +98,18 @@ class CountingStreamTest extends TestCase {
 		$this->assertStringContainsString('[stream-incomplete]', $plain);
 	}
 
+	public function testToStringAfterPartialReadCountsBodyOnce(): void {
+		$reqId = uniqid('req', true);
+		$stream = $this->stream('hello world', $reqId);
+
+		$this->assertSame('hello', $stream->read(5));
+		$this->assertSame('hello world', (string)$stream);
+		$stream->close();
+
+		$entries = $this->readJsonLines();
+		$this->assertSame(11, $entries[0]['compressionStats']['decompressed_bytes']);
+	}
+
 	public function testCloseTwiceWritesOnlyOneEntry(): void {
 		$reqId = uniqid('req', true);
 		$stream = $this->stream('abc', $reqId);
