@@ -46,7 +46,7 @@ Controls which responses are logged. Default: `0`.
 | `1` | HTTP 400+ only |
 | `2` | HTTP 500+ only |
 
-Network errors (connection failures, DNS failures, etc.) are always logged regardless of this setting.
+Network errors (connection failures, DNS failures, etc.) are always logged regardless of this setting. Values outside the 0–2 range are clamped to the nearest valid level.
 
 ```php
 'audit_http_client_loglevel' => 1,
@@ -67,7 +67,7 @@ Every entry starts with the request ID: the ID of the server request that trigge
 Plain-text example:
 
 ```
-67527c3ff4b8-a3f9bc12 2026-05-05T14:23:01+00:00 GET https://example.com/feed HTTP/2 200 compressed=4821 decompressed=18944 ratio=0.25 encoding=br Hdrs=Host,Accept-Encoding,User-Agent "Nextcloud/32 ..."
+gkAokgFCiaAKp30GwoTn-a3f9bc12 2026-05-05T14:23:01+00:00 GET https://example.com/feed HTTP/2 200 compressed=4821 decompressed=18944 ratio=0.25 encoding=br Hdrs=Host,Accept-Encoding,User-Agent "Nextcloud/32 ..."
 ```
 
 ```php

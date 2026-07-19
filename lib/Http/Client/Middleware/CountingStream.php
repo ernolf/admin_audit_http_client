@@ -65,8 +65,16 @@ class CountingStream implements StreamInterface {
 
 	public function __toString(): string {
 		try {
+			$seekable = $this->inner->isSeekable();
 			$contents = (string)$this->inner;
-			$this->bytesRead += strlen($contents);
+			if ($seekable) {
+				// A seekable stream rewinds for __toString, so the full body
+				// was delivered exactly once no matter how much was already
+				// read before — adding would double count.
+				$this->bytesRead = max($this->bytesRead, strlen($contents));
+			} else {
+				$this->bytesRead += strlen($contents);
+			}
 			return $contents;
 		} catch (\Throwable) {
 			return '';

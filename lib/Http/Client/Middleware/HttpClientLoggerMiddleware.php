@@ -80,7 +80,9 @@ class HttpClientLoggerMiddleware {
 	) {
 		$this->logger = $logger;
 		$this->logBaseDir = rtrim($logBaseDir, '/');
-		$this->logLevel = $logLevel;
+		// Values outside the documented 0-2 range fall back to the nearest
+		// valid level instead of silently behaving like "log everything".
+		$this->logLevel = min(max($logLevel, 0), 2);
 		$this->logFormat = $logFormat;
 		$this->excludeDomains = $excludeDomains;
 		$this->serverReqId = $serverReqId;
