@@ -46,6 +46,7 @@ final class HttpClientLoggerMiddleware {
 		'apikey',
 		'auth',
 		'client_secret',
+		'key',
 		'password',
 		'secret',
 		'signature',
