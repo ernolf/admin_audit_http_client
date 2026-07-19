@@ -88,7 +88,7 @@ List of hostnames to exclude from logging. Requests to matching hosts are passed
 
 ### `audit_http_client_redact_headers`
 
-Additional header names whose values are logged as `[redacted]`. Matching is case-insensitive. Default: `[]`.
+Additional header names whose values are logged as `***REMOVED SENSITIVE VALUE***`. Matching is case-insensitive. Default: `[]`.
 
 The following headers are always redacted and cannot be un-redacted: `Authorization`, `Proxy-Authorization`, `Cookie`, `Set-Cookie`, `X-Api-Key`, `X-Auth-Token`.
 
@@ -100,7 +100,7 @@ The following headers are always redacted and cannot be un-redacted: `Authorizat
 
 ### `audit_http_client_redact_params`
 
-Additional query parameter names whose values are logged as `[redacted]` in the `uri` field. Matching is case-insensitive; the parameter name and the rest of the URI stay unchanged. Default: `[]`.
+Additional query parameter names whose values are logged as `***REMOVED SENSITIVE VALUE***` in the `uri` field. Matching is case-insensitive; the parameter name and the rest of the URI stay unchanged. Default: `[]`.
 
 The following parameters are always redacted and cannot be un-redacted: `access_token`, `api_key`, `apikey`, `auth`, `client_secret`, `password`, `secret`, `signature`, `token`, `X-Amz-Credential`, `X-Amz-Security-Token`, `X-Amz-Signature`.
 
@@ -112,9 +112,9 @@ The following parameters are always redacted and cannot be un-redacted: `access_
 
 ### `audit_http_client_redact_path_patterns`
 
-Additional PCRE patterns whose matches in the URI **path** are logged as `[redacted]` — for secrets that live in the path instead of the query string. Default: `[]`.
+Additional PCRE patterns whose matches in the URI **path** are logged as `***REMOVED SENSITIVE VALUE***` — for secrets that live in the path instead of the query string. Default: `[]`.
 
-The following pattern is always applied and cannot be removed: `#(?<=/)private-[^/]+#` — it covers Google's secret iCal addresses (`…/ical/<user>/private-<hash>/basic.ics`), where the hash is the only protection of the calendar.
+The following pattern is always applied and cannot be removed: `#(?<=/private-)[^/]+#` — it covers Google's secret iCal addresses (`…/ical/<user>/private-<hash>/basic.ics`), where the hash is the only protection of the calendar. Only the hash is replaced; the `private-` marker stays readable.
 
 ```php
 'audit_http_client_redact_path_patterns' => [
