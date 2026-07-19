@@ -1,7 +1,7 @@
 {
 	"name": "ernolf/admin_audit_http_client",
 	"type": "nextcloud-app",
-	"version": "0.2.0",
+	"version": "1.0.0",
 	"license": "AGPL-3.0-or-later",
 	"config": {
 		"platform": {

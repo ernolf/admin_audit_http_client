@@ -12,7 +12,7 @@
 Extends admin_audit with logging of all outgoing HTTP requests made by Nextcloud's internal Guzzle-based HTTP client. Logs include method, URI, status code, HTTP version, request and response headers, cURL transfer statistics, and compression metrics. Credential-bearing headers such as Authorization and Cookie are always redacted.
 No UI, no routes — pure audit logging into per-host JSON and plain-text files below a configurable log directory.
 	</description>
-	<version>0.2.0</version>
+	<version>1.0.0</version>
 	<licence>agpl</licence>
 	<author mail="raphael.gradenwitz@googlemail.com">[ernolf] - Raphael Gradenwitz</author>
 	<namespace>AdminAuditHttpClient</namespace>
