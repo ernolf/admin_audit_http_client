@@ -8,7 +8,7 @@
 [![REUSE status](https://api.reuse.software/badge/github.com/ernolf/admin_audit_http_client)](https://api.reuse.software/info/github.com/ernolf/admin_audit_http_client)
 [![Nextcloud App Store](https://img.shields.io/badge/Nextcloud-App_Store-0082c9?logo=nextcloud&logoColor=white)](https://apps.nextcloud.com/apps/admin_audit_http_client)
 [![Latest release](https://img.shields.io/github/v/release/ernolf/admin_audit_http_client?sort=semver&color=0082c9)](https://github.com/ernolf/admin_audit_http_client/releases/latest)
-[![Built with ncmake](https://img.shields.io/badge/built%20with-ncmake-0082c9)](https://github.com/ernolf/ncmake)
+[![built with ncmake](https://cdn.jsdelivr.net/gh/ernolf/ncmake@main/img/ncmake-badge.svg)](https://github.com/ernolf/ncmake)
 
 Nextcloud app that logs all outgoing HTTP requests made by Nextcloud's built-in HTTP client (`OC\Http\Client\Client`, Guzzle-based).
 
