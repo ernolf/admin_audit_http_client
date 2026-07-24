@@ -1,27 +1,27 @@
 {
   "block-unconventional-commits.yml": {
-    "hash": "0265b1456e429e5219b48c4c8aaea726ac60fa24db0d3f3ef68e2c9f04fcbea9",
-    "sha": "bcc722a61824682a2a1538b9e1450e98616d1889",
+    "hash": "e1d854cced0b0bebfb49e695dd706114fa3634c2d1af1b88f480216a21f72efb",
+    "sha": "4972f8bb33dbeef4ff141444c50ad49adf6cb93d",
     "source": "nextcloud"
   },
   "lint-info-xml.yml": {
-    "hash": "072fff135b8965517449e86ebf3853d635f1d997cf430f60d30210f728293ef4",
-    "sha": "e55705222f421f6066ec4df853aab507b955b091",
+    "hash": "629ecc8bed8b31c8271dff087b6d27a0c20abc50ede536cfb6460d7b5ee9b7ed",
+    "sha": "8e6968c9160c9904e43c917e67cb88dd54114e97",
     "source": "nextcloud"
   },
   "lint-php-cs.yml": {
-    "hash": "d8e98ce4e02e20971edac20b3027daed61451bd75588bdf3a57695be00aacbcb",
-    "sha": "0a65977bef92cbd684f8ee5dde415ad7f95ee4f4",
+    "hash": "c3392831e83461f7830381bb611dc7b30e301c13096a30d0d7c03d5b9c4eafce",
+    "sha": "dba0956222e24d8848a85e3b7391d3a7c44ed611",
     "source": "nextcloud"
   },
   "lint-php.yml": {
-    "hash": "c35e63c27843f2012a097bb4b2a7ef622130509e68cde724c53c6b5eb2886863",
-    "sha": "cb2684b245c23c086af88e6bc6fc30a5df038c6e",
+    "hash": "0c7941ebf5bea4684c0ed50bad3266837690b56d4c298056b047e6b4905f9119",
+    "sha": "e73949e050a6e962a58662c778fca1e5e507588c",
     "source": "nextcloud"
   },
   "psalm.yml": {
-    "hash": "3cc569bb779c95a6c612aa5f0946c5df373fddfcd9899b514c7d269bffd3e9cb",
-    "sha": "4feadcb8fad77932706c100663577dca7c0b44d8",
+    "hash": "470a7b9ced6e10aeb3ce8e06ed58db7f9d378d426434a7c290ab563f7caef6d4",
+    "sha": "eafcfeb518842ddfb440de2f8b058cd72750e96c",
     "source": "nextcloud"
   },
   "release.yml": {
@@ -30,8 +30,8 @@
     "source": "ncmake"
   },
   "reuse.yml": {
-    "hash": "3593df9baabc3dd1fc3539143fafa78706de81cf575cd2e6e7f7207ee6fb390f",
-    "sha": "4e1a74194ecf76f593564a7c0b35bdb19bd23a58",
+    "hash": "7507fa539b8cdec70a5de786fbac4e38f1e53f9df404dbfc75bb2fe7950bc010",
+    "sha": "67fdafc440e24937ece9f2f16d7f2c2df2c7efa5",
     "source": "nextcloud"
   },
   "workflow-updater.yml": {
