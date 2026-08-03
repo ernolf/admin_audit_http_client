@@ -129,7 +129,7 @@ Invalid patterns are skipped. To skip logging for a host entirely, use [`audit_h
 
 The app is published in the [App Store](https://apps.nextcloud.com/apps/admin_audit_http_client). Install it through [Nextcloud's app management UI](https://docs.nextcloud.com/server/latest/admin_manual/apps_management.html#managing-apps) (**Apps** → search for **Auditing / HTTP Client Logging** → Install) or with `occ app:enable admin_audit_http_client`.
 
-It is built with [ncmake](https://github.com/ernolf/ncmake). To build and install it from source — release tarball, `make rsync` or `make cp` — see the [installation guide](https://github.com/ernolf/ncmake/blob/main/doc/INSTALL.md).
+It is built with [ncmake](https://github.com/ernolf/ncmake). To build and install it from source — release tarball, `make rsync` or `make cp` — see the [installation guide](https://github.com/ernolf/ncmake/wiki/Installation).
 
 ## Roadmap
 
