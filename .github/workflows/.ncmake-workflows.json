@@ -4,6 +4,11 @@
     "sha": "4972f8bb33dbeef4ff141444c50ad49adf6cb93d",
     "source": "nextcloud"
   },
+  "branch-cleanup.yml": {
+    "hash": "2b3011daceeab1eb43062f8096d559829f0fc387688298f8977b77deb7975399",
+    "sha": "5fee38eb16b76634495d19760bb4299ea258fd18",
+    "source": "ncmake"
+  },
   "lint-info-xml.yml": {
     "hash": "629ecc8bed8b31c8271dff087b6d27a0c20abc50ede536cfb6460d7b5ee9b7ed",
     "sha": "8e6968c9160c9904e43c917e67cb88dd54114e97",
